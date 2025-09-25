@@ -22,19 +22,22 @@
 ## Week 2 Summary (MM/DD/YYYY)
 ### This week I worked on:
 
-[Your answer here]
+* My plans for this week were pretty much upended following the event of me learning that you need a Mac to really do any kind of iPhone app development. I don't know how I didn't realize this before, but this essentially blocks me from testing one of the main features of my proposed bin-packing app: 3D scanning items to easily add them to a packing list. This is because I own an iPhone, and would thus not be able to easily test any camera functionality on a mobile app. I am open to making modifications to the packing concept that I could realistically develop, but I honestly think the app is better suited to mobile than desktop/web so I decided to research other project ideas.
+* One idea I thought of was essentially a way to share tabs across browsers of different users, which I think would be useful for things like group research projects so everyone can navigate to an article of interest without having to manually share links. It could also be cool as a group shopping tool so people in a group can easily find products that other group members are interested in. I would probably implement this through a browser extension.
+    * I don't know if this is enough for a senior project, and I need to come up with additional features
 
 ### This week I learned:
 
-[Your answer here]
+* I spent a little bit of time researching if this new idea is actually possible as a browser extension, and it seems like it is. It might require a back end to actually route requests to the correct browsers, though.
 
 ### My successes this week were:
 
-[Your answer here]
+* Despite realizing my packing idea isn't feasible for me to make since I can't really develop for iPhone, I came up with a new idea that I still think is cool.
 
 ### The challenges I faced this week were:
 
-[Your answer here]
+* I was sick for a majority of the week, so I didn't have the energy to do much research.
+* I also had to come up with a new idea for a project, which came with a bit of frustration trying to find an idea that I thought was cool and had not been overdone.
 
 ---
 
