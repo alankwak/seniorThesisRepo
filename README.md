@@ -75,106 +75,148 @@ The scope of the system also includes administrative tools for the Registrar’s
 The Mahoney University Registration System is a web-based platform designed to automate the course registration process for students and faculty. It serves as the primary interface for students to manage their academic schedules and for university staff to oversee the course offerings and registration workflows.
 
 ### System Features:
-1. **Secure Login**: Ensures that only authorized users (students, faculty, and staff) have access to the system, with user authentication based on university credentials.
-2. **Course Search**: Allows students to browse available courses by department, term, and subject, with filtering options based on course availability, schedule, and prerequisites.
-3. **Course Registration**: Students can add or drop courses, view class schedules, and receive notifications of any conflicts or unmet prerequisites.
-4. **Grades and Transcripts**: Provides students with access to their grades from current and past semesters, as well as the ability to request official transcripts.
-5. **Registrar Management Tools**: The Registrar’s Office can create, modify, and delete course sections, set enrollment limits, and manage waitlists.
+1. **Create a Session**: Allows a user to create a new shared tab session and designates that user as the session leader. The user has the option to select existing tabs to add to the session or to create a new blank tab.
+2. **Share Current Session**: Users can create a session code (with optional password) and share that code with other users.
+3. **Join Existing Session**: Users can input a session code (and password, if required) to join a session if it is currently active.
+4. **Designate User Permissions**: The session leader has the option to designate permissions (collaborator, view-only) for each individual user connected to the session.
+5. **Add/Remove Tab(s) from Session**: Users with the collaborator role can choose tabs on their own machine to add or remove from the shared session.
+6. **View Session Tabs**: Users connected to a session can open a sidebar where they can see all of the shared tabs in the session, organized by the collaborator who shared them.
+7. **End Session**: The session leader can end a session, disconnecting all users and saving the tab history into each user's "recent sessions" list.
+8. **Follow-Along**: If possible, collaborators can iniatiate a "follow-along" mode that automatically syncs their tabs with other users in the session.
 
-The system is designed with scalability in mind, allowing it to handle thousands of students registering simultaneously during peak periods. It will integrate with the university’s existing Student Information System (SIS) and is built using modern web technologies to ensure ease of use, reliability, and performance.
-
-The following sections detail the specific use cases that the system will support, describing how students and staff will interact with the system during typical operations.
+The following sections detail the specific use cases that the system will support.
 
 ## Use Cases
 
-### Use Case 1.1: Secure Login
-- **Actors**: Student or registrar
-- **Overview**: Actor uses password to verify their identity.
+### Use Case 1.1: Create a Session
+- **Actors**: A single user.
+- **Overview**: User starts a shared tab session.
 
 **Typical Course of Events**:
-1. Page prompts for username and password.
-2. User enters their username and password and hits enter/login.
-3. System verifies that the username and password are correct.
+1. User clicks a "Create Session" button from the extension dropdown or sidebar
+2. Run Use Case 1.5, *Add/Remove Tab(s) from Session*
+3. The session is created in the user's browser, and the user is prompted to perform Use Case 1.2, *Share Current Session*
+
+### Use Case 1.2: Share Current Session
+- **Actors**: A session leader (creator).
+- **Overview**: A session creator makes their session joinable by other users.
+
+**Typical Course of Events**:
+1. Run Use Case 1.1, *Create a Session*
+2. User clicks a share/publish session button
+3. User is prompted to select whether or not the session should be password protected. If yes, user enters a password
+4. User is prompted to select the default permission level of users who join the session (collaborator, view-only). By default, this option is collaborator
+5. User clicks "share" button, which generates a unique session code that other users can use to join the session
 
 **Alternative Courses**:
-- **Step 3**: User and/or password are not correct.
-  1. Displays error.
-  2. Go back to step 1.
+- **Step 5**: User selected the session should be password protected in *Step 3* but no password was provided.
+  1. Displays an error prompting the user to add a password or deselect password protection for their session before allowing them to perform the step
 
-### Use Case 1.2: Find a Course
-- **Actors**: Student
-- **Overview**: Student finds a desired class.
+### Use Case 1.3: Join Existing Session
+- **Actors**: A user.
+- **Overview**: A user enters a session code to join an existing session.
 
 **Typical Course of Events**:
-1. Run Use Case 1.1, *Secure Login*.
-2. Displays list of current and upcoming semesters.
-3. Student selects a semester.
-4. Displays departments actively offering courses in that semester.
-5. Student selects a department.
-6. Displays courses of that department from that semester that are currently offered.
-7. Student selects a course.
-8. Displays course details.
+1. User clicks a "join session" button from the extension drop-down or sidebar
+* 2.1 User enters the session code of the session they want to join
+* 2.2 If the session is password protected, user enters the password of the session they want to join
+3. User clicks final "join" button, which connects them to the session.
+4. User is assigned the default session role
 
 **Alternative Courses**:
-- Any step: Student can start a new search at any time
-  1. Student clicks "start new search."
-  2. Go back to step 2.
+- **Step 2**: Session code or password is invalid or incorrect.
+  1. Displays an error
+  2. Returns to step 2
 
-### Use Case 1.3: Register for a Course
-- **Actors**: Student
-- **Overview**: Student registers for a course.
+### Use Case 1.4: Designate User Permissions
+- **Actors**: A session leader/creator.
+- **Overview**: The session leader/creator changes the role (collaborator, view-only) of another user in the session.
 
 **Typical Course of Events**:
-1. Run Use Case 1.2, *Find a Course*.
-2. Student clicks on "register for course" button.
-3. Verify that student can take the course.
-4. Display "You have successfully registered for 'insert course name here'."
+1. Session leader opens a list of connected users
+2. Session leader finds the user whose permissions they want to change in the list
+3. Next to the user's name, the session leader uses a dropdown to change the user's role.
+4. Session leader clicks "save" button
+5. The system applies the updated permission to the chosen user
+
+### Use Case 1.5: Add/Remove Tab(s) from Session
+- **Actors**: A user with the collaborator role.
+- **Overview**: A collaborator adds or removes one or more tabs from the tabs that they are sharing to the session.
+
+**Typical Course of Events**:
+
+There will ideally be many ways to perform this use case.
+
+**Option 1** (Adding Tabs)
+1. User clicks an "add tabs to session" button
+2. User is prompted with a menu showing all of their tabs that are not already part of the session
+3. User selects tabs they want to add, or can select a new blank tab
+4. User clicks "ok"
 
 **Alternative Courses**:
-- **Step 4**: Student can't take course
-  1. Displays "You cannot take this course, please contact the registrar for further information."
+- **Step 4**: User selects okay, but no tabs were selected in *step 3*
+  1. Make no changes to the user's shared tabs
 
-### Use Case 1.4: Check Grades
-- **Actors**: Student
-- **Overview**: Student checks grades.
+**Option 2** (Adding Tabs)
 
-**Typical Course of Events**:
-1. Run Use Case 1.1, *Secure Login*.
-2. Display previous semesters in which the student took course(s).
-3. Student selects semester.
-4. Displays courses and grades.
+*Precondition*: the user already has tabs that they are sharing in the browser
 
-### Use Case 1.5: Registrar Creates Sections
-- **Actors**: Registrar
-- **Overview**: Registrar creates section.
+1. Assuming the shared tab group for each user works like regular tab groups on Chrome, the user drags a tab they want to add into the shared tab group on the upper tab-bar
 
-**Typical Course of Events**:
-1. Run Use Case 1.1, *Secure Login*.
-2. Registrar selects "Create Section."
-3. Display "Create Section" form.
-4. Registrar submits form.
-5. System verifies valid entry (no overlapping schedules/times).
-6. Displays section details and successfully added.
+**Option 1** (Removing Tabs) 
+1. User clicks a "remove tabs to session" button
+2. User is prompted with a menu showing all of their tabs that are already part of the session
+3. User selects tabs they want to remove
+4. User clicks "ok"
 
 **Alternative Courses**:
-- **Step 6**: Entry invalid
-  1. Display error.
-  2. Go back to step 3.
+- **Step 4**: User selects ok, but no tabs were selected in *step 3*
+  1. Make no changes to the user's shared tabs
 
-### Use Case 1.6: Registrar Modifies Section
-- **Actors**: Registrar
-- **Overview**: Registrar modifies existing sections.
+**Option 2** (Removing Tabs)
+
+1. Assuming the shared tab group for each user works like regular tab groups on Chrome, the user drags a tab they want to remove out of the shared tab group on the upper tab-bar
+
+**Option 3** (Removing Tabs)
+
+1. User closes a tab that is currently part of the shared tab group
+
+### Use Case 1.6: View Session Tabs
+- **Actors**: A user.
+- **Overview**: A user checks which tabs are currently being shared, and by who.
 
 **Typical Course of Events**:
-1. Run Use Case 1.1, *Secure Login*.
-2. Registrar selects "Modify section."
-3. Displays all sections (with order options).
-4. Choose section.
-5. Display "Edit Form" with filled-in data.
-6. Submit/verify data.
-7. Display "Section successfully edited."
+1. User opens a sidebar from the extension, which lists each user and the tabs that they are sharing
+2. User can click on a tab to open it in their browser
+
+### Use Case 1.7: End Session
+- **Actors**: Session leader/creator.
+- **Overview**: The session leader/creator ends the shared tab session, disconnecting all connected users and saving a snapshot of the session to each user's "recent sessions."
+
+**Typical Course of Events**:
+1. Session leader opens the extension sidebar or dropdown
+2. Session leader clicks "end session" button
+3. Session leader confirms they want to end the session
+4. Every user in the session is disconnected, and the session code is freed up for use by other sessions
+5. Every user is prompted to select the tabs they would like to keep open in the browser from all tabs that were part of the session
+6. Every user is prompted to select whether the session tabs are saved to a user-specific history of "recent sessions"
+
+### Use Case 1.8: Follow-Along Mode
+- **Actors**: A user with the collaborator role.
+- **Overview**: Collaborators can activate "follow-along" mode, which mirrors the user's actions on their own browser to a shared tab group on the other connected users' browsers.
+
+**Typical Course of Events**:
+1. Collaborator activates "follow-along" mode from a button on the extension dropdown or sidebar
+2. Other users in the session see the collaborator as being in "follow-along" mode via a notification or icon next to their name
+3. Other users can choose to "follow" the collaborator in follow-along mode, which opens a new tab group with all of the collaborator's tabs.
+4. As the collaborator updates their tabs, i.e. by performing Use Case 1.5 or entering in a new url on an existing tab, the tabs are updated for the other users
 
 **Alternative Courses**:
-- **Step 7**: Invalid Data
-  1. Display Error.
-  2. Go back to step 5.
+- User "unfollows" a collaborator in follow-along mode.
+  1. User presses an "unfollow" button
+  2. The changes from the collaborator's tabs stop being mirrored to the user's tabs
+  3. The user is prompted to select tabs from the follow-along mode they would like to keep open (similar to Use Case 1.7, *End Session*)
+
+- Collaborator exits follow-along mode
+  1. Collaborator clicks a "stop sharing" or "exit follow-along mode" button
+  2. Each user "following along" is taken through steps 2-3 for "User unfollows a collaborator in follow-along mode"

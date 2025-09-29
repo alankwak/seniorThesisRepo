@@ -1,8 +1,8 @@
-## Week 1 Summary (MM/DD/YYYY)
+## Week 1 Summary (09/15/2025)
 
 ### This week I worked on:
 
-* I tried to brainstorm project ideas, such as an app that allows users to create their own objects and then pack them into a 3D space such as a box. I am not 100% set on this idea, but I think it would be cool to make and could include a lot of different technologies (computer vision/LIDAR for item creation, bin packing in a new computational language (e.g. Rust), a new web framework (e.g. Angular).
+* I tried to brainstorm project ideas, such as an app that allows users to create their own objects and then pack them into a 3D space such as a box. I am not 100% set on this idea, but I think it would be cool to make and could include a lot of different technologies (computer vision/LIDAR for item creation, bin packing in a new computational language (e.g. Rust), a new web framework (e.g. Angular)).
 * I probably worked for about 2 hours this week, which is less than I would have liked to. This is mostly because I was in the process of finalizing the topic for my math thesis. I should be able to work more on this project next week. I would also like to come up with some other ideas to consider besides the packing app.
 
 ### This week I learned:
@@ -19,7 +19,7 @@
 
 ---
 
-## Week 2 Summary (MM/DD/YYYY)
+## Week 2 Summary (09/22/2025)
 ### This week I worked on:
 
 * My plans for this week were pretty much upended following the event of me learning that you need a Mac to really do any kind of iPhone app development. I don't know how I didn't realize this before, but this essentially blocks me from testing one of the main features of my proposed bin-packing app: 3D scanning items to easily add them to a packing list. This is because I own an iPhone, and would thus not be able to easily test any camera functionality on a mobile app. I am open to making modifications to the packing concept that I could realistically develop, but I honestly think the app is better suited to mobile than desktop/web so I decided to research other project ideas.
@@ -41,22 +41,23 @@
 
 ---
 
-## Week 3 Summary (MM/DD/YYYY)
+## Week 3 Summary (09/29/2025)
 ### This week I worked on:
 
-[Your answer here]
+* I met with Professor Mahoney and pitched the tab-sharing extension idea. He said it sounded good.
+* I wrote the most essential use-cases for the tab-sharing extension in ```README.md```.
 
 ### This week I learned:
 
-[Your answer here]
+* I learned how to write use cases for a project idea.
 
 ### My successes this week were:
 
-[Your answer here]
+* I finalized a project idea and made progress by writing use cases for it.
 
 ### The challenges I faced this week were:
 
-[Your answer here]
+* None
 
 ---
 
