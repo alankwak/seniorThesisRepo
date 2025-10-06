@@ -57,26 +57,27 @@
 
 ### The challenges I faced this week were:
 
-* None
+* I did not feel I had any challenges this week.
 
 ---
 
-## Week 4 Summary (MM/DD/YYYY)
+## Week 4 Summary (10/06/2025)
 ### This week I worked on:
 
-[Your answer here]
+* I updated ```README.md``` with an additional product overview (adding to the use-cases I wrote last week).
+* I did some preliminary research into developing a chrome extension.
 
 ### This week I learned:
 
-[Your answer here]
+* I learned that I will probably be using the Chrome .tabs API the most for this project, and that Chrome has a built-in sidebar that extensions can use.
 
 ### My successes this week were:
 
-[Your answer here]
+* I made steady progress on my project.
 
 ### The challenges I faced this week were:
 
-[Your answer here]
+* I did not feel I had any challenges this week.
 
 ---
 
