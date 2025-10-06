@@ -1,78 +1,28 @@
-# Senior Thesis Repo: [PLACE YOUR PROJECT NAME HERE]
-This repository is provided to help you build your senior thesis project. You will edit it to store your specification documents, code, and weekly checkins.
-
-First, fork this repo (this makes a copy of it associated with your account) and then clone it to your machine (this makes a copy of your fork on your personal machine). You can then use an editor and a GitHub client to manage the repository.
-
-### Markdown
-This file is called README.md. It is a [Markdown file](https://en.wikipedia.org/wiki/Markdown). Markdown is a simple way to format documents. When a Markdown-ready viewer displays the contents of a file, it formats it to look like HTML. However, Markdown is significantly easier to write than HTML. VSCode supports displaying Markdown in a preview window. GitHub uses Markdown extensively including in every repo's description file, ```README.md```.
-
-All Markdown files end with the extension ```.md```. There is a Markdown tutorial [here](https://www.markdowntutorial.com/) and a Markdown cheatsheet [here](https://www.markdownguide.org/cheat-sheet/).
-
-#### Images
-If you would like to add images to a Markdown file, place them in the ```docs/images/``` directory in this repo and reference them using markdown like this:
-
-```
-![alt text](relative/path/to/image)
-```
-
-Here is how to add the Carthage logo to a Markdown file (you can see the image in the repo right now):
-
-```
-![Carthage Firebird Logo](docs/images/firebirdLogo.jpg)
-```
-![Carthage Firebird Logo](docs/images/firebirdLogo.jpg)
-
-This ensures that images are correctly linked and displayed when viewing the documentation on GitHub or any Markdown-supported platform.
-
-## Code
-The ```code``` directory is used to store your code. You can put it all in one directory or you can create subdirectories.
-
-I have added a ```main.cpp``` file to get you started. Feel free to remove it.
-
-If you have any questions feel free to ask me! I'll answer professor questions, customer questions, and give advice if asked.
-
-# Sample Spec
-
-Below is an example of a project specification.  
-
-## Software Requirements Specification for the Mahoney University Registration System
+# Senior Thesis Repo: Tab-Sharing Browser Extension (Name WIP)
 
 ## Introduction
 
 ### Purpose
-The purpose of this document is to outline the functional and non-functional requirements of Mahoney University’s new online registration system. The system is designed to streamline the registration process for students and faculty, replacing the outdated manual system. This specification serves as a contract between the system stakeholders and the developers to ensure that the system meets the needs of its users while adhering to university policies and technical constraints.
+The purpose of this document is to outline the functional and non-functional requirements of my senior thesis project, which is a browser extension that allows users to share tabs between devices (Name WIP). The extension is designed to streamline the task of shared web browsing, when multiple users are using the web to accomplish a shared goal. 
 
-The key goals of the new system are:
-- To improve the efficiency of the course registration process for students.
-- To provide staff in the Registrar’s Office with tools to manage course offerings, schedules, and student records.
-- To enhance the accuracy and accessibility of student academic information, such as grades and enrollment history.
-- To support the university’s transition to digital infrastructure while maintaining compatibility with legacy systems during a transitional period.
+The key goals of the extension are:
+- To allow users to easily share their tabs/urls with other users.
+- To provide functionality for a variety of use cases, such as shared online shopping or teaching using a web page.
+- To prioritize ease-of-use for users using intuitive and user-friendly design as well as simple setup and low latency.
 
 ### Scope
-This system is intended to support the registration process for all students at Mahoney University, including undergraduates, graduate students, and non-degree-seeking students. The system will handle:
-- Student authentication and secure access to personal records.
-- Course search and registration.
-- Enrollment validation, including prerequisite checks and course availability.
-- Management of student schedules, including the ability to add, drop, or modify course enrollments.
-- Grade viewing and transcript requests.
-
-The scope of the system also includes administrative tools for the Registrar’s Office to:
-- Create and modify course offerings for each academic term.
-- Manage enrollment caps, waitlists, and course prerequisites.
-- Track student progress and generate reports for academic performance.
+This extension is designed to provide a foundational platform for a variety of use cases and tasks. This foundation consist of:
+- Session creation using a room code and optional password.
+- Assignment of privileges to users in a session. 
+- A visual display containing the users connected to a session and the tabs that they are sharing.
+- A history of sessions and session tabs for easy recollection or additions to browsing sessions.
+- An optional follow-along mode, allowing a user's changes to update to other users' browsers in real time.
 
 ### Definitions, Acronyms, and Abbreviations
-- **Registrar**: The official responsible for maintaining student records, managing course schedules, and overseeing the registration process.
-- **Student Information System (SIS)**: A university-wide database that stores student records, course information, and academic data.
-- **GPA**: Grade Point Average, a numerical representation of a student's academic performance.
-- **Semester**: A division of the academic year, typically consisting of a Fall and Spring term, in which courses are offered and completed.
-- **Waitlist**: A system that allows students to reserve a spot in a full course, subject to availability if another student drops the course.
-- **Prerequisite**: A course or requirement that must be completed before a student can enroll in a more advanced course.
-- **User Role**: A designation for system access levels, such as student, registrar, or faculty member, each with different permissions within the system.
-- **Concurrent Enrollment**: The ability for students to be enrolled in multiple courses during the same academic term.
+- \[ph\]
 
 ## Overview
-The Mahoney University Registration System is a web-based platform designed to automate the course registration process for students and faculty. It serves as the primary interface for students to manage their academic schedules and for university staff to oversee the course offerings and registration workflows.
+The tab-sharing extension serves as an easier way of allowing two or more users to share their browsing tabs with each other. It allows users to create and join sessions, add or remove tabs to the shared session, view tabs in the shared session, and follow along to another user's web browsing.
 
 ### System Features:
 1. **Create a Session**: Allows a user to create a new shared tab session and designates that user as the session leader. The user has the option to select existing tabs to add to the session or to create a new blank tab.
