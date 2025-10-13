@@ -1,4 +1,4 @@
-## Week 1 Summary (09/15/2025)
+## Week 1 Summary (09/08/2025-09/15/2025)
 
 ### This week I worked on:
 
@@ -19,7 +19,7 @@
 
 ---
 
-## Week 2 Summary (09/22/2025)
+## Week 2 Summary (09/15/2025-09/22/2025)
 ### This week I worked on:
 
 * My plans for this week were pretty much upended following the event of me learning that you need a Mac to really do any kind of iPhone app development. I don't know how I didn't realize this before, but this essentially blocks me from testing one of the main features of my proposed bin-packing app: 3D scanning items to easily add them to a packing list. This is because I own an iPhone, and would thus not be able to easily test any camera functionality on a mobile app. I am open to making modifications to the packing concept that I could realistically develop, but I honestly think the app is better suited to mobile than desktop/web so I decided to research other project ideas.
@@ -41,7 +41,7 @@
 
 ---
 
-## Week 3 Summary (09/29/2025)
+## Week 3 Summary (09/22/2025-09/29/2025)
 ### This week I worked on:
 
 * I met with Professor Mahoney and pitched the tab-sharing extension idea. He said it sounded good.
@@ -61,7 +61,7 @@
 
 ---
 
-## Week 4 Summary (10/06/2025)
+## Week 4 Summary (09/29/2025-10/06/2025)
 ### This week I worked on:
 
 * I updated ```README.md``` with an additional product overview (adding to the use-cases I wrote last week).
@@ -81,22 +81,23 @@
 
 ---
 
-## Week 5 Summary (MM/DD/YYYY)
+## Week 5 Summary (10/06/2025-10/13/2025)
 ### This week I worked on:
 
-[Your answer here]
+* To be honest, I did not work much on my project this week. I was busy with tests in other classes and interview prep for internships.
+* I did watch a short video about how to create a basic chrome extension and then test it using Chrome's developer mode for extensions.
 
 ### This week I learned:
 
-[Your answer here]
+* I learned how to test a custom chrome extension locally without actually publishing it. I have a feeling testing my extension will be a little more involved since the functionality is based on multiple machines but it might be as simple as just running the same development extension on the otehr machine at the same time.
 
 ### My successes this week were:
 
-[Your answer here]
+* I learned how to test a custom chrome extension.
 
 ### The challenges I faced this week were:
 
-[Your answer here]
+* I had trouble finding time to work on this project among various other projects and responsibilities I had this week.
 
 ---
 
