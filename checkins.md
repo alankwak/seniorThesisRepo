@@ -101,22 +101,23 @@
 
 ---
 
-## Week 6 Summary (MM/DD/YYYY)
+## Week 6 Summary (10/13/2025-10/20/2025)
 ### This week I worked on:
 
-[Your answer here]
+* I created a test extension that changes all of the images on my portfolio webpage with a picture of my dog. This helped me understand how content scripts are used in extensions, though I think the majority of my extension will use service workers instead of content scripts since I am not changing anything on the actual websites.
 
 ### This week I learned:
 
-[Your answer here]
+* I learned the difference between service workers and content scripts in a browser extension.
+* I also learned how to make a barebones content script.
 
 ### My successes this week were:
 
-[Your answer here]
+* I successfully made my first browser extension, even though it is really small and doesn't do much.
 
 ### The challenges I faced this week were:
 
-[Your answer here]
+* I did not feel I faced any challenges this week.
 
 ---
 
