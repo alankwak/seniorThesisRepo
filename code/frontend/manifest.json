@@ -19,6 +19,9 @@
         "default_path": "sidebar/sidebar.html"
     },
     "permissions": [
-        "sidePanel"
+        "sidePanel",
+        "identity",
+        "identity.email",
+        "storage"
     ]
 }
