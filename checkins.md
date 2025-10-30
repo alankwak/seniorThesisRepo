@@ -121,22 +121,25 @@
 
 ---
 
-## Week 7 Summary (MM/DD/YYYY)
+## Week 7 Summary (10/20/2025-10/27/2025)
 ### This week I worked on:
 
-[Your answer here]
+* I created a very simple extension that allows the user to open a sidebar and click a button to create a session. This also required making a backend server to process the session create request and create a session code. Right now, the code is random, but I might make it sequential so that it is easier to guarantee that no two active sessions have the same session code.
+* Currently, the data on the server is stored using SQLite. I would like to update it to a dedicated DB server like Postgres but that is not my main priority right now.
+* I also fiddled around with the Chrome identity API to see if I could assign user ids in the DB from the user's logged in Google account. It turns out this feature only works on published extensions. Therefore, I will probably have to design my own login system if I want to store user-based data. Right now, the backend server assigns a user id to new requests, which then gets stored in the browser's local storage for future requests (just so I can get accurate user-based data in the DB for testing).
 
 ### This week I learned:
 
-[Your answer here]
+* I learned some more about the Chrome browser APIs.
+* I also freshened up on my web development skills.
 
 ### My successes this week were:
 
-[Your answer here]
+* I was able to connect the frontend extension to a backend server to process logic and store data. I also started work on the actual extension, rather than the demo extension I tried out last week.
 
 ### The challenges I faced this week were:
 
-[Your answer here]
+Without really taking the time to plan out an overall system architecture and DB relationships, it was kind of difficult to understand where I should focus development to start. I think I might work on this topic next week.
 
 ---
 
