@@ -143,22 +143,23 @@ Without really taking the time to plan out an overall system architecture and DB
 
 ---
 
-## Week 8 Summary (MM/DD/YYYY)
+## Week 8 Summary (10/27/2025-11/3/2025)
 ### This week I worked on:
 
-[Your answer here]
+* I did some more research into existing backend server technologies to facilitate online "sessions" between users. One thing that came up was Redis pub/sub, but I after looking into it I don't think I will implement Redis to start because I don't plan on having more than one server to start. Otherwise, it seems like the server can just keep track of a hash map of session ids to connected users websockets in order and then use that session id + map in any future events to broadcast messages to other users in the session.
+* I also worked on putting together a database ER diagram to better understand the information I need to store in the database and how queries might be written to get certain data on to the extension.
 
 ### This week I learned:
 
-[Your answer here]
+* I learned about Redis pub/sub (despite choosing not to use it at the moment), and more about how websockets are set up through node. 
 
 ### My successes this week were:
 
-[Your answer here]
+* I have a better idea of the underlying design that I plan to implement for the project.
 
 ### The challenges I faced this week were:
 
-[Your answer here]
+* It is still somewhat difficult to determine whether or not the features I have researched will be able to do what I want them to in the actual extension. I will figure more of this out next week, when I hopefully have time to go back to writing code.
 
 ---
 
