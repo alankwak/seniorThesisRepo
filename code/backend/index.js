@@ -6,33 +6,18 @@ const sqlite3 = require('sqlite3').verbose();
 const http = require('http');
 const WebSocket = require('ws');
 const cors = require('cors');
+const path = require('path');
+const morgan = require('morgan');
+
+const DBAbstraction = require('./DBAbstraction'); 
 
 // ----- DB setup (SQLite file: data.db) -----
-const db = new sqlite3.Database('./data/data.db');
-db.serialize(()=>{
-  db.run(`
-    CREATE TABLE IF NOT EXISTS sessions (
-      id INTEGER PRIMARY KEY, 
-      code TEXT UNIQUE, 
-      creator TEXT, 
-      created_at TEXT, 
-      is_active INTEGER DEFAULT 1
-    )`
-  );
-  db.run(`
-    CREATE TABLE IF NOT EXISTS tabs (
-      id INTEGER PRIMARY KEY,
-      session_id TEXT, 
-      url TEXT, 
-      title TEXT, 
-      created_at TEXT
-    )`
-);
-});
+const db = new DBAbstraction(path.join(__dirname, 'data', 'CoTab.db')); 
 
 // ----- Express REST API -----
 const app = express();
 app.use(bodyParser.json());
+app.use(morgan('dev'));
 app.use(cors());
 
 // Helper to generate short code
@@ -45,11 +30,11 @@ app.post('/api/session/create', (req, res)=>{
   const code = genCode();
   const creator = req.body.creator || 'anon';
   const created_at = new Date().toISOString();
-  db.run(`INSERT INTO sessions (code, creator, created_at) VALUES (?, ?, ?)`,
-    [code, creator, created_at], (err) => {
-      if (err) return res.status(500).json({error: err.message});
-      res.json({code, creator, created_at});
-    });
+  // db.run(`INSERT INTO sessions (code, creator, created_at) VALUES (?, ?, ?)`,
+  //   [code, creator, created_at], (err) => {
+  //     if (err) return res.status(500).json({error: err.message});
+  //     res.json({code, creator, created_at});
+  //   });
 });
 
 // Join session by code (returns session id and tabs)
