@@ -1,4 +1,6 @@
 let cachedUserId = null;
+let activeSession = false;
+let sharedGroupId = null;
 
 chrome.runtime.onStartup.addListener(initUserId);
 chrome.runtime.onInstalled.addListener(initUserId);
@@ -15,10 +17,40 @@ function initUserId() {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "getUserId") {
-    if (cachedUserId) {
-      sendResponse(cachedUserId);
+  // if (message.action === "getUserId") {
+  //   if (cachedUserId) {
+  //     sendResponse(cachedUserId);
+  //   }
+  //   return true; // keep message channel open for async sendResponse
+  // }
+  if(message.action === "getSessionStatus") {
+    sendResponse(activeSession);
+  }
+  if(message.action === "updateGroupId") {
+    sharedGroupId = message.message ? message.message : null;
+  }
+  if(message.action === "getGroupId") {
+    sendResponse(sharedGroupId);
+  }
+  if(message.action === "startSession") {
+    activeSession = true;
+  }
+  if(message.action === "leaveSession") {
+    activeSession = false;
+  }
+});
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if(tab.groupId === sharedGroupId) {
+    console.log("New tab in group");
+    if(changeInfo.url) {
+      console.log(`New URL: ${changeInfo.url}`);
     }
-    return true; // keep message channel open for async sendResponse
+  }
+});
+
+chrome.tabGroups.onRemoved.addListener( (tabGroup) => {
+  if(tabGroup.id === sharedGroupId) {
+    sharedGroupId = null;
   }
 });

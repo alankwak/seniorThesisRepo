@@ -22,6 +22,8 @@
         "sidePanel",
         "identity",
         "identity.email",
-        "storage"
+        "storage",
+        "tabGroups",
+        "tabs"
     ]
 }

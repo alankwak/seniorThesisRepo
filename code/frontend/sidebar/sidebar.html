@@ -5,20 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sidebar</title>
   <link rel="stylesheet" href="sidebar.css" />
+  <script src = "components/selectableTable.js"></script>
 </head>
 <body>
-  <p>This sidebar stays open while you browse.</p>
-
-  <select id="sidebarDropdown">
-    <option value="overview">Overview</option>
-    <option value="settings">Settings</option>
-  </select>
-
-  <div id="output"></div>
-
-  <button id="create">Create Session</button>
-
-  <div id="codeDisplay"></div>
+  <button id="share">Start Sharing Tabs</button>
+  <selectable-table id="tabSelection"></selectable-table>
+  <button id="group">Share</button>
 
   <script src="sidebar.js"></script>
 </body>
