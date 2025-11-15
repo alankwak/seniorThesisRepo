@@ -27,10 +27,10 @@ class NonselectableTable extends HTMLElement {
         }
         .table-wrap {
           border: 1px solid #ddd;
-          max-height: 200px;
+          max-height: 30em;
           overflow-x: hidden;
-          overflow-y: scroll;
-          border-radius: 10px;
+          overflow-y: auto;
+          border-radius: 0px 0px 10px 10px;
         }
         table {
           width: 100%;
@@ -47,16 +47,6 @@ class NonselectableTable extends HTMLElement {
         }
         img {
           width: 20px;
-        }
-        tbody tr {
-          cursor: pointer;
-        }
-        tbody tr:hover {
-          background: #f9f9f9;
-        }
-        .checkbox-cell {
-          width: 42px;
-          text-align: center;
         }
         .tab-title {
           font-weight: bold;
