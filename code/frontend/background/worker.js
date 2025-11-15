@@ -27,7 +27,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse(activeSession);
   }
   if(message.action === "updateGroupId") {
-    sharedGroupId = message.message ? message.message : null;
+    sharedGroupId = message.message || null;
   }
   if(message.action === "getGroupId") {
     sendResponse(sharedGroupId);
@@ -49,8 +49,12 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-chrome.tabGroups.onRemoved.addListener( (tabGroup) => {
+
+chrome.tabGroups.onRemoved.addListener( async (tabGroup) => {
   if(tabGroup.id === sharedGroupId) {
-    sharedGroupId = null;
+    const stillExists = await chrome.tabs.query({groupId: sharedGroupId});
+    if(stillExists.length == 0) {
+      sharedGroupId = null;
+    }
   }
 });

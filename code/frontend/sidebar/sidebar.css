@@ -5,21 +5,53 @@ body {
   background-color: #f9f9f9;
 }
 
-h2 {
-  margin-bottom: 8px;
-}
-
-select {
-  padding: 5px;
+/* Component wrapper */
+.shared-tabs {
   width: 100%;
-  margin-bottom: 10px;
-  border-radius: 5px;
+  max-width: 700px;
+  margin: 0 auto; /* centers entire component */
+  padding: 16px;
+  box-sizing: border-box;
 }
 
-#output {
-  background: #fff;
-  padding: 10px;
-  border-radius: 6px;
-  box-shadow: 0 0 4px rgba(0,0,0,0.1);
-  min-height: 40px;
+/* --- User section --- */
+
+.user-label {
+  width: 100%;
+  border-bottom: 2px solid #1d4f2c;
+  color: #1d4f2c;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+  font-weight: bold;
+  font-size: 12pt;
+}
+
+/* --- Controls --- */
+
+.controls {
+  display: flex;
+  justify-content: center;
+}
+
+.controls .primary {
+  padding: 8px 16px;
+}
+
+/* --- Table wrapper --- */
+
+.table-section {
+  margin-bottom: 24px;
+}
+
+/* --- Action buttons (Confirm + Cancel) --- */
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.actions button {
+  padding: 8px 16px;
+  display: none;
 }

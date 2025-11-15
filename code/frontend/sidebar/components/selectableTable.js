@@ -34,10 +34,10 @@ class SelectableTable extends HTMLElement {
         }
         .table-wrap {
           border: 1px solid #ddd;
-          border-radius: 6px;
-          max-height: 450px;
+          max-height: 300px;
           overflow-x: hidden;
           overflow-y: scroll;
+          border-radius: 10px;
         }
         table {
           width: 100%;
@@ -45,26 +45,32 @@ class SelectableTable extends HTMLElement {
           table-layout: fixed;
         }
         thead th {
-          background: #fafafa;
+          background: #3a6738ff;
           border-bottom: 1px solid #ddd;
           padding: 8px 12px;
           text-align: left;
           font-size: 13px;
-          color: #555;
+          color: #f5f5f5ff;
+        }
+        tbody {
+          background: #d8f3d9ff;
         }
         tbody td {
           padding: 8px 12px;
           border-bottom: 1px solid #eee;
           font-size: 14px;
         }
+        img {
+          width: 20px;
+        }
         tbody tr {
           cursor: pointer;
         }
         tbody tr:hover {
-          background: #f5f7fa;
+          background: #e0ffe2ff;
         }
         tbody tr[aria-selected="true"] {
-          background: #e8f0ff;
+          background: #b8f2bcff;
         }
         .checkbox-cell {
           width: 42px;
@@ -91,7 +97,8 @@ class SelectableTable extends HTMLElement {
           <thead>
             <tr>
               <th class="checkbox-cell"><input type="checkbox" id="select-all"></th>
-              <slot name="header"></slot>
+              <th></th>
+              <th> Tab Name and URL </th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -111,7 +118,7 @@ class SelectableTable extends HTMLElement {
 
         tr.innerHTML = `
           <td class="checkbox-cell"><input type="checkbox"></td>
-          <td> ${row[1]} </td>
+          <td> <img src="${row[1]}" /> </td>
           <td>
             <div>
               <div class="tab-title"> ${row[2]} </div>
