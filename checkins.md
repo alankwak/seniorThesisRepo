@@ -143,7 +143,7 @@ Without really taking the time to plan out an overall system architecture and DB
 
 ---
 
-## Week 8 Summary (10/27/2025-11/3/2025)
+## Week 8 Summary (10/27/2025-11/03/2025)
 ### This week I worked on:
 
 * I did some more research into existing backend server technologies to facilitate online "sessions" between users. One thing that came up was Redis pub/sub, but I after looking into it I don't think I will implement Redis to start because I don't plan on having more than one server to start. Otherwise, it seems like the server can just keep track of a hash map of session ids to connected users websockets in order and then use that session id + map in any future events to broadcast messages to other users in the session.
@@ -163,41 +163,42 @@ Without really taking the time to plan out an overall system architecture and DB
 
 ---
 
-## Week 9 Summary (MM/DD/YYYY)
+## Week 9 Summary (11/03/2025-11/10/2025)
 ### This week I worked on:
 
-[Your answer here]
+* After all the previous weeks' work thinking about the backend, I had the itch to work on something different (i.e. the frontend). I used the ```chrome.tabs``` and ```chrome.tabGroups``` APIs to start messing around with how to actually manipulate tabs and tab groups in the browser. I was able to create a button that created a new tab in the browser and automatically put it into its own group.
 
 ### This week I learned:
 
-[Your answer here]
+* I learned more about Chrome APIs and how to manipulate tabs and tab data in the browser.
 
 ### My successes this week were:
 
-[Your answer here]
+* I now have more tangible progress towards my actual project.
 
 ### The challenges I faced this week were:
 
-[Your answer here]
+* I did not feel I faced any significant challenges this week.
 
 ---
 
-## Week 10 Summary (MM/DD/YYYY)
+## Week 10 Summary (11/10/2025-11/17/2025)
 ### This week I worked on:
 
-[Your answer here]
+* I worked more on the frontend of my extension, including the design and logic. You are now able to add any currently open tabs to the tab group using the extension, and the tabs that are open in the tab group now appear in the sidebar. There is also a bunch more logic with the tab group that means it will continue to work even if the user messes with it via normal tab group actions in the browser (i.e. dragging tabs in/out of the group, dragging the group out of the window, closing the group, etc).
+* Eventually, I am hoping the same event listeners I used to keep track of the open tabs in the group can be used to send the tab data to the backend server so it can share the data with other connected users.
 
 ### This week I learned:
 
-[Your answer here]
+* I learned EVEN MORE about Chrome APIs and how to manipulate tabs in the browser.
 
 ### My successes this week were:
 
-[Your answer here]
+* I think I have a very solid base for the local functionality of the extension. I hope that this base will make it easy for me to test the backend functionality.
 
 ### The challenges I faced this week were:
 
-[Your answer here]
+* I did not feel I faced any significant challenges this week (though there was the normal struggles of trying to find the CSS styles I wanted to use and debugging across multiple event handlers in different files).
 
 ---
 
