@@ -9,7 +9,7 @@ body {
 .shared-tabs {
   width: 100%;
   max-width: 700px;
-  margin: 0 auto; /* centers entire component */
+  margin: 0 auto;
   padding: 16px;
   box-sizing: border-box;
 }

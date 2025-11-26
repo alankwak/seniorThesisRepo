@@ -4,20 +4,17 @@ body {
   font-family: Arial, sans-serif;
 }
 
-select, button {
-  width: 100%;
-  padding: 6px;
-  margin-top: 5px;
-}
-
-button {
-  background-color: #0078d7;
-  color: white;
+.sidebarButton {
+  display: flex;
+  justify-self: right;
+  margin-top: 8px;
+  background: none;
   border: none;
-  border-radius: 5px;
-  cursor: pointer;
+  text-decoration: underline;
+  font-weight: bold;
+  color: rgb(255, 136, 0);
 }
 
-button:hover {
-  background-color: #005fa3;
+.sidebarButton:hover {
+  cursor: pointer;
 }

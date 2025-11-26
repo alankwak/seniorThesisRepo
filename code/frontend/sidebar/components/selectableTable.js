@@ -7,7 +7,7 @@ class SelectableTable extends HTMLElement {
 
   connectedCallback() {
     this.data = this.data || [];
-    if (this.isConnected) this.render();
+    if(this.isConnected) this.render();
   }
 
   set data(rows) {
