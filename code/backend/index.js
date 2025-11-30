@@ -11,7 +11,6 @@ const morgan = require('morgan');
 
 const DBAbstraction = require('./DBAbstraction'); 
 
-// ----- DB setup (SQLite file: data.db) -----
 const db = new DBAbstraction(path.join(__dirname, 'data', 'CoTab.db')); 
 
 // ----- Express REST API -----
@@ -20,34 +19,41 @@ app.use(bodyParser.json());
 app.use(morgan('dev'));
 app.use(cors());
 
+let activeSessions = {};
+
 // Helper to generate short code
 function genCode() {
-  return Math.random().toString(36).substring(2,8).toUpperCase();
+  return Math.random().toString(36).substring(2,9).toUpperCase();
 }
 
 // Create session
 app.post('/api/session/create', (req, res)=>{
   const code = genCode();
   const creator = req.body.creator || 'anon';
-  const created_at = new Date().toISOString();
-  // db.run(`INSERT INTO sessions (code, creator, created_at) VALUES (?, ?, ?)`,
-  //   [code, creator, created_at], (err) => {
-  //     if (err) return res.status(500).json({error: err.message});
-  //     res.json({code, creator, created_at});
-  //   });
+  const createdAt = new Date().toISOString();
+  const pwd = req.body.password || null;
+
+  try {  
+    let session = {
+      code: code,
+      leader: creator,
+      createdAt: createdAt,
+      tabs: {},
+      members: [],
+      password: pwd
+    };
+
+    activeSessions[code] = session;
+  } catch(error) {
+    console.error("Error creating session:", error);
+    return res.status(500).json({ success: false, error: "Error creating session" });
+  }
+  res.status(201).json({ success: true, code: code });
 });
 
 // Join session by code (returns session id and tabs)
 app.post('/api/session/join', (req, res)=>{
   const { code } = req.body;
-  db.get(`SELECT id, creator, created_at, is_active FROM sessions WHERE code = ?`, [code], (err,row)=>{
-    if (err) return res.status(500).json({error: err.message});
-    if (!row) return res.status(404).json({error:'session not found'});
-    db.all(`SELECT id,url,title,created_at FROM tabs WHERE session_id = ? ORDER BY created_at`, [row.id], (err2, tabs)=>{
-      if (err2) return res.status(500).json({error: err2.message});
-      res.json({session: row, tabs});
-    });
-  });
 });
 
 const server = http.createServer(app);

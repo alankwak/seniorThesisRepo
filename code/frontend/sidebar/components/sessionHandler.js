@@ -1,13 +1,35 @@
 class SessionHandler extends HTMLElement {
+    static sessionCode = null;
+    
     constructor() {
         super();
         this.attachShadow({ mode: "open" });
         this.state = "default";
-        this.sessionCode = null;
     }
 
-    connectedCallback() {
+    async connectedCallback() {
+        await this.init();
         if(this.isConnected) this.render();
+    }
+
+    async init() {
+        const currentCode = await chrome.runtime.sendMessage({ action: "getSessionCode" });
+        if(currentCode) {
+            this.sessionCode = currentCode;
+            this.state = "connected";
+        }
+        chrome.storage.onChanged.addListener((changes, area) => {
+            if(area === "local" && changes.activeSessionCode) {
+                const newCode = changes.activeSessionCode.newValue;
+                if(newCode) {
+                    this.sessionCode = newCode;
+                    this.state = "connected";
+                } else {
+                    this.state = "default";
+                }
+                this.render();
+            }
+        });
     }
 
     render() {
@@ -107,24 +129,37 @@ class SessionHandler extends HTMLElement {
                 </div>
             `;
 
-            const createButton = this.shadowRoot.getElementById("create")
+            const createButton = this.shadowRoot.getElementById("create");
             this.shadowRoot.getElementById("cancel").addEventListener("click", () => {
                 this.state = "default";
                 this.render();
             });
-            createButton.addEventListener("click", () => {
+
+            createButton.addEventListener("click", async () => {
                 createButton.style.display = "none";
                 const password = this.shadowRoot.getElementById("pwd").value;
-                this.state = "connected";
+                const response = await chrome.runtime.sendMessage({ action: "createSession", password: password });
+                console.log(response);
+                if(response && response.success) {
+                    this.sessionCode = response.code;
+                    this.state = "connected";
+                } else if(response && response.error) {
+                    alert("Error creating session: " + response.error);
+                    this.state = "default";
+                } else {
+                    alert("Error creating session");
+                    this.state = "default";
+                }
                 this.render();
             });
+
         } else if(this.state === "join") {
             this.shadowRoot.innerHTML = `
                 ${styles}
                 <div class="wrapper">
                   <div class="header"> Join an ongoing session: </div>
                   <div class="wrapper" style="gap: 5px; margin: 10px auto 10px auto;">
-                    8-Character Session Code: <input type="text" id="code" placeholder="Session Code" maxlength="8"> </input>
+                    7-Character Session Code: <input type="text" id="code" placeholder="Session Code" maxlength="7"> </input>
                   </div>
                   <div class="wrapper" style="gap: 5px; margin: 10px auto 10px auto;">
                     Password: <input type="password" id="pwd" placeholder="Password" maxlength="40"> </input> 
@@ -135,10 +170,12 @@ class SessionHandler extends HTMLElement {
                   </div>
                 </div>
             `;
+
             this.shadowRoot.getElementById("cancel").addEventListener("click", () => {
                 this.state = "default";
                 this.render();
             });
+
         } else if(this.state === "connected") {
             this.shadowRoot.innerHTML = `
                 ${styles}
@@ -152,6 +189,7 @@ class SessionHandler extends HTMLElement {
                 </div>
             `;
             this.shadowRoot.getElementById("leave").addEventListener("click", () => {
+                chrome.runtime.sendMessage({ action: "leaveSession" });
                 this.state = "default";
                 this.render();
             });
