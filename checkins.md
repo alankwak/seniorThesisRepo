@@ -202,26 +202,27 @@ Without really taking the time to plan out an overall system architecture and DB
 
 ---
 
-## Week 11 Summary (MM/DD/YYYY)
+## Week 11 Summary (11/17/2025-11/24/2025)
 ### This week I worked on:
 
-[Your answer here]
+* I started work on the backend of the extension, mainly creating a route to create and store a session on the server. In order to test this, I also created a custom ```SessionHandler``` component to manage creating, joining, and leaving sessions on the frontend.
 
 ### This week I learned:
 
-[Your answer here]
+* I wouldn't say I learned anything new, but I did refresh my knowledge on custom HTML web components.
 
 ### My successes this week were:
 
-[Your answer here]
+* After dealing with preserving the state of the list of tabs in the sidebar, it was way easier for me to figure out how to preserve the state of the ```SessionHandler``` component. 
+* Since the component appears in both the popup and sidebar windows, I also figured out how to automatically change the state of the other instance of the component when both windows are open and the state is changed.
 
 ### The challenges I faced this week were:
 
-[Your answer here]
+* My biggest challenge was probably figuring out how to implement success #2.
 
 ---
 
-## Week 12 Summary (MM/DD/YYYY)
+## Week 12 Summary (11/24/2025-12/01/2025) - BREAK
 ### This week I worked on:
 
 [Your answer here]
