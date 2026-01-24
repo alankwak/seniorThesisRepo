@@ -1,63 +1,117 @@
-// server.js - minimal TabShare backend (Quick path)
 const express = require('express');
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const sqlite3 = require('sqlite3').verbose();
-const http = require('http');
-const WebSocket = require('ws');
 const cors = require('cors');
 const path = require('path');
 const morgan = require('morgan');
+const { Server } = require('socket.io');
 
 const DBAbstraction = require('./DBAbstraction'); 
 
 const db = new DBAbstraction(path.join(__dirname, 'data', 'CoTab.db')); 
 
-// ----- Express REST API -----
 const app = express();
 app.use(bodyParser.json());
 app.use(morgan('dev'));
 app.use(cors());
 
-let activeSessions = {};
+const io = new Server(3000, {
+  cors: { origin: "*" }
+});
 
-// Helper to generate short code
-function genCode() {
-  return Math.random().toString(36).substring(2,9).toUpperCase();
-}
 
-// Create session
-app.post('/api/session/create', (req, res)=>{
-  const code = genCode();
-  const creator = req.body.creator || 'anon';
-  const createdAt = new Date().toISOString();
-  const pwd = req.body.password || null;
+// State Structure:
+// const roomState = {
+//   "482931": {
+//   password: "xyz" || null,
+//   users: {
+//     "user-uuid-1": ["https://google.com", ...],
+//     "user-uuid-2": ["https://github.com", ...]
+//     }
+//   }
+// };
+const roomState = {};
 
-  try {  
-    let session = {
-      code: code,
-      leader: creator,
-      createdAt: createdAt,
-      tabs: {},
-      members: [],
-      password: pwd
+// Helper to generate a random 6-digit code
+const generateJoinCode = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+io.on("connection", (socket) => {
+  console.log(`Connection established: ${socket.id}`);
+
+  // --- 1. CREATE ROOM ---
+  socket.on("create-room", ({ password, userId }) => {
+    let joinCode = generateJoinCode();
+
+    // Ensure code is unique
+    while(roomState[joinCode]) {
+      joinCode = generateJoinCode();
+    }
+
+    roomState[joinCode] = {
+      password: password || null,
+      users: {}
     };
 
-    activeSessions[code] = session;
-  } catch(error) {
-    console.error("Error creating session:", error);
-    return res.status(500).json({ success: false, error: "Error creating session" });
-  }
-  res.status(201).json({ success: true, code: code });
+    console.log(`Room Created: ${joinCode} by ${userId}`);
+    socket.emit("room-created", { joinCode });
+  });
+
+  // --- 2. JOIN ROOM ---
+  socket.on("join-room", ({ joinCode, password, userId }) => {
+    const room = roomState[joinCode];
+
+    // Validation
+    if(!room) {
+      return socket.emit("error-message", "Room not found.");
+    }
+    if(room.password && room.password !== password) {
+      return socket.emit("error-message", "Incorrect password.");
+    }
+
+    // Success: Link socket to room metadata
+    socket.join(joinCode);
+    socket.roomID = joinCode;
+    socket.userId = userId;
+
+    console.log(`User ${userId} joined room ${joinCode}`);
+
+    // Sync everyone in the room
+    io.to(joinCode).emit("room-update", room.users);
+  });
+
+  // --- 3. SHARE TAB / UPDATE URL ---
+  socket.on("share-tab", ({ url }) => {
+    const { roomID, userId } = socket;
+
+    if(roomID && roomState[roomID]) {
+      roomState[roomID].users[userId] = url;
+      
+      // Broadcast the fresh state to the whole room
+      io.to(roomID).emit("room-update", roomState[roomID].users);
+    }
+  });
+
+  // --- 4. HEARTBEAT / CLEANUP ---
+  socket.on("disconnect", (reason) => {
+    const { roomID, userId } = socket;
+    
+    if(roomID && roomState[roomID]) {
+      // Remove user from the state
+      delete roomState[roomID].users[userId];
+
+      const remainingUsers = Object.keys(roomState[roomID].users).length;
+      
+      if(remainingUsers === 0) {
+        // Delete room after last user leaves
+        delete roomState[roomID];
+        console.log(`Room ${roomID} cleared from memory.`);
+      } else {
+        // Update remaining users
+        io.to(roomID).emit("room-update", roomState[roomID].users);
+      }
+    }
+    console.log(`Socket ${socket.id} disconnected. Reason: ${reason}`);
+  });
 });
 
-// Join session by code (returns session id and tabs)
-app.post('/api/session/join', (req, res)=>{
-  const { code } = req.body;
-});
-
-const server = http.createServer(app);
-
-// start server
-const PORT = process.env.PORT || 53140;
-server.listen(PORT, ()=> console.log(`Server listening on http://localhost:${PORT}`));
+console.log("Tab-Share Server running on port 3000");

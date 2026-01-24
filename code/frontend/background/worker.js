@@ -1,31 +1,77 @@
-let cachedUserId = null;
+import {io} from "socket.io-client"
+
+let socket;
+
+async function connectSocket() {
+  if(socket && socket.connected) {
+    return;
+  }
+  
+  const { userId } = await chrome.storage.local.get("userId");
+  const { lastRoomId } = await chrome.storage.local.get("activeSessionCode");
+
+  socket = io("http://localhost:3000", {
+    reconnection: true,
+    reconnectionDelay: 1000,
+    transports: ["websocket"]
+  });
+
+  // If we have a saved room, rejoin it automatically
+  if(lastRoomId) {
+    socket.emit("join-room", { joinCode: lastRoomId, userId });
+  }
+
+  socket.on("room-created", (message) => {
+    cachedActiveSessionCode = message.joinCode;
+    chrome.storage.local.set({ activeSessionCode: message.joinCode });
+  });
+
+}
+
+async function createRoom(password) {
+  if(socket) {
+    socket.emit("create-room", {password: password || null, userId: cachedUserId})
+  }
+}
+
+async function disconnectSocket() {
+  if (socket) {
+    socket.disconnect();
+    socket = null; 
+  }
+
+  await chrome.storage.local.remove(["activeSessionCode"]);
+}
+
+let cachedUserId = getPersistentUserId();
 let activeSession = false;
 let cachedActiveSessionCode = null;
 let cachedGroupId = null;
 
+async function getPersistentUserId() {
+  const data = await chrome.storage.local.get("userId");
+  
+  if (data.userId) {
+    return data.userId;
+  }
+
+  const newId = self.crypto.randomUUID();
+
+  await chrome.storage.local.set({ userId: newId });
+  
+  return newId;
+}
+
 chrome.storage.local.get("activeSessionCode", data => {
   cachedActiveSessionCode = data.activeSessionCode || null;
+  activeSession = data.activeSessionCode ? true : false;
 });
 
 chrome.storage.local.get("sharedGroupId", data => {
   cachedGroupId = data.sharedGroupId || null;
 });
 
-chrome.runtime.onStartup.addListener(initUserId);
-chrome.runtime.onInstalled.addListener(initUserId);
-
-function initUserId() {
-  chrome.storage.local.get("userId", data => {
-    if(data.userId) {
-      cachedUserId = data.userId;
-    } else {
-      cachedUserId = crypto.randomUUID();
-      chrome.storage.local.set({ userId: cachedUserId });
-    }
-  });
-}
-
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
   // if (message.action === "getUserId") {
   //   if (cachedUserId) {
   //     sendResponse(cachedUserId);
@@ -49,40 +95,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   if(message.action === "createSession") {
 
-    if (activeSession) {
+    if(activeSession) {
       sendResponse({ success: false, error: "Already in a session" });
-      return true;
+    } else {
+      (async () => {
+        try {
+          await connectSocket();
+          await createRoom(null);
+          activeSession = true;
+          sendResponse({ success: true, code: "ph"});
+        }
+        catch (err) {
+          sendResponse({ success: false, error: err});
+        }
+      })();
     }
-
-    (async () => {
-      try {
-        const response = await fetch("http://localhost:53140/api/session/create", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            creator: cachedUserId,
-            password: message.password || null
-          })
-        });
-
-        const data = await response.json();
-        activeSession = true;
-        chrome.storage.local.set({ activeSessionCode: data.code });
-        cachedActiveSessionCode = data.code;
-        sendResponse(data);
-
-      } catch (err) {
-        sendResponse({ success: false, error: err.message });
-      }
-    })();
 
     return true;
   }
   if(message.action === "leaveSession") {
     if(!activeSession) return;
-    cachedActiveSessionCode = null;
-    chrome.storage.local.remove("activeSessionCode");
     activeSession = false;
+    if(!socket || !socket.connected) return;
+    disconnectSocket();
   }
 });
 

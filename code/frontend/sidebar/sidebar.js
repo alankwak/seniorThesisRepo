@@ -39,16 +39,16 @@ startGroupButton.addEventListener("click", async () => {
 confirmGroupButton.addEventListener("click", async () => {
   confirmGroupButton.style.display = "none";
   cancelGroupButton.style.display = "none";
+
   let tabIds = tabTable.getSelectedIds().map(id => parseInt(id));
   const groupId = await chrome.runtime.sendMessage({action: "getGroupId"});
-  console.log(groupId);
   tabTable.toggle();
+
   if(tabIds.length == 0) {
     const newTab = await chrome.tabs.create({ url: "https://www.google.com" });
     tabIds = [newTab.id];
   }
   chrome.tabs.group({tabIds: tabIds, groupId: groupId}, async (newGroup) => {
-    console.log(newGroup);
     await chrome.runtime.sendMessage({ action: "updateGroupId", message: newGroup});
     await chrome.tabGroups.update(newGroup, {color: "green", title: "CoTab" });
   });

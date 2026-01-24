@@ -145,7 +145,11 @@ class SessionHandler extends HTMLElement {
                     this.state = "connected";
                 } else if(response && response.error) {
                     alert("Error creating session: " + response.error);
-                    this.state = "default";
+                    if(response.error == "Already in a session") {
+                        this.state = "connected";
+                    } else {
+                        this.state = "default";
+                    }
                 } else {
                     alert("Error creating session");
                     this.state = "default";
