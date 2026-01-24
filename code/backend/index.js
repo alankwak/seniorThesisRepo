@@ -42,6 +42,8 @@ io.on("connection", (socket) => {
   socket.on("create-room", ({ password, userId }) => {
     let joinCode = generateJoinCode();
 
+    console.log(userId);
+
     // Ensure code is unique
     while(roomState[joinCode]) {
       joinCode = generateJoinCode();
@@ -94,7 +96,7 @@ io.on("connection", (socket) => {
   // --- 4. HEARTBEAT / CLEANUP ---
   socket.on("disconnect", (reason) => {
     const { roomID, userId } = socket;
-    
+
     if(roomID && roomState[roomID]) {
       // Remove user from the state
       delete roomState[roomID].users[userId];

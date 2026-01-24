@@ -1,6 +1,9 @@
 import {io} from "socket.io-client"
 
 let socket;
+let activeSession = false;
+let cachedActiveSessionCode = null;
+let cachedGroupId = null;
 
 async function connectSocket() {
   if(socket && socket.connected) {
@@ -30,7 +33,8 @@ async function connectSocket() {
 
 async function createRoom(password) {
   if(socket) {
-    socket.emit("create-room", {password: password || null, userId: cachedUserId})
+    const userId = await getPersistentUserId();
+    socket.emit("create-room", { password: password || null, userId: userId })
   }
 }
 
@@ -42,11 +46,6 @@ async function disconnectSocket() {
 
   await chrome.storage.local.remove(["activeSessionCode"]);
 }
-
-let cachedUserId = getPersistentUserId();
-let activeSession = false;
-let cachedActiveSessionCode = null;
-let cachedGroupId = null;
 
 async function getPersistentUserId() {
   const data = await chrome.storage.local.get("userId");
