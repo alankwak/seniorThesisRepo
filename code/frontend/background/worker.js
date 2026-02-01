@@ -6,36 +6,86 @@ let cachedActiveSessionCode = null;
 let cachedGroupId = null;
 
 async function connectSocket() {
-  if(socket && socket.connected) {
-    return;
-  }
-  
   const { userId } = await chrome.storage.local.get("userId");
-  const { lastRoomId } = await chrome.storage.local.get("activeSessionCode");
+  const { lastRoomId } = await chrome.storage.local.get("activeSessionCode")
 
-  socket = io("http://localhost:3000", {
-    reconnection: true,
-    reconnectionDelay: 1000,
-    transports: ["websocket"]
+  return new Promise((resolve, reject) => {
+    if(socket && socket.connected) {
+      return resolve(socket);
+    }
+
+    if(!socket) {
+      socket = io("http://localhost:3000", {
+        reconnection: true,
+        reconnectionDelay: 1000,
+        transports: ["websocket"]
+      });
+
+      // If we have a saved room, rejoin it automatically
+      if(lastRoomId) {
+        socket.emit("join-room", { joinCode: lastRoomId, userId });
+      }
+
+      socket.on("room-created", (message) => {
+        cachedActiveSessionCode = message.joinCode;
+        chrome.storage.local.set({ activeSessionCode: message.joinCode });
+      });
+
+      socket.on("disconnect", (reason) => {
+        console.log("Disconnected from server:", reason);
+
+        chrome.storage.local.remove(["activeSessionCode"]);
+        cachedActiveSessionCode = null;
+        activeSession = false;
+
+        if (reason === "transport close" || reason === "ping timeout") {
+          showStatusUI("Server is offline. Reconnecting...");
+        } else if (reason === "io client disconnect") {
+          showStatusUI("You left the room.");
+        }
+      });
+
+      socket.on("connect_error", (error) => {
+        socket.disconnect();
+      });
+    }
+
+    socket.once("connect", () => {
+      resolve(socket); 
+    });
+
+    socket.once("connect_error", (error) => {
+      reject(error);
+    });
+
+    socket.connect();
   });
-
-  // If we have a saved room, rejoin it automatically
-  if(lastRoomId) {
-    socket.emit("join-room", { joinCode: lastRoomId, userId });
-  }
-
-  socket.on("room-created", (message) => {
-    cachedActiveSessionCode = message.joinCode;
-    chrome.storage.local.set({ activeSessionCode: message.joinCode });
-  });
-
 }
 
 async function createRoom(password) {
-  if(socket) {
-    const userId = await getPersistentUserId();
-    socket.emit("create-room", { password: password || null, userId: userId })
-  }
+  const userId = await getPersistentUserId();
+
+  return new Promise((resolve, reject) => {
+    if (!socket || !socket.connected) {
+      return reject(new Error("Socket not connected. Please connect first."));
+    }
+
+    const timeout = setTimeout(() => {
+      reject(new Error("Server timed out creating room."));
+    }, 10000);
+
+    socket.emit("create-room", { password: password || null, userId: userId }, (response) => {
+      clearTimeout(timeout);
+
+      if(response && response.success) {
+        chrome.storage.local.set({ activeSessionCode: response.joinCode }, () => {
+          resolve(response);
+        });
+      } else {
+        reject(new Error(response.error || "Failed to create room"));
+      }
+    });
+  });
 }
 
 async function disconnectSocket() {
@@ -44,6 +94,8 @@ async function disconnectSocket() {
     socket = null; 
   }
 
+  activeSession = false;
+  cachedActiveSessionCode = null;
   await chrome.storage.local.remove(["activeSessionCode"]);
 }
 
@@ -81,9 +133,7 @@ chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
     sendResponse(activeSession);
   }
   if(message.action === "getSessionCode") {
-    if(activeSession) {
-      sendResponse(cachedActiveSessionCode);
-    }
+    sendResponse(cachedActiveSessionCode);
   }
   if(message.action === "updateGroupId") {
     cachedGroupId = message.message || null;
@@ -100,12 +150,15 @@ chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
       (async () => {
         try {
           await connectSocket();
-          await createRoom(null);
+          const response = await createRoom(message.password);
+
           activeSession = true;
-          sendResponse({ success: true, code: "ph"});
+          cachedActiveSessionCode = response.joinCode;
+
+          sendResponse({ success: true, code: response.joinCode });
         }
         catch (err) {
-          sendResponse({ success: false, error: err});
+          sendResponse({ success: false, error: err.message || err});
         }
       })();
     }
@@ -113,9 +166,6 @@ chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
     return true;
   }
   if(message.action === "leaveSession") {
-    if(!activeSession) return;
-    activeSession = false;
-    if(!socket || !socket.connected) return;
     disconnectSocket();
   }
 });

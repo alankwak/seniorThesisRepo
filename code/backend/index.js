@@ -6,10 +6,6 @@ const path = require('path');
 const morgan = require('morgan');
 const { Server } = require('socket.io');
 
-const DBAbstraction = require('./DBAbstraction'); 
-
-const db = new DBAbstraction(path.join(__dirname, 'data', 'CoTab.db')); 
-
 const app = express();
 app.use(bodyParser.json());
 app.use(morgan('dev'));
@@ -39,7 +35,7 @@ io.on("connection", (socket) => {
   console.log(`Connection established: ${socket.id}`);
 
   // --- 1. CREATE ROOM ---
-  socket.on("create-room", ({ password, userId }) => {
+  socket.on("create-room", ({ password, userId }, callback) => {
     let joinCode = generateJoinCode();
 
     console.log(userId);
@@ -54,8 +50,13 @@ io.on("connection", (socket) => {
       users: {}
     };
 
+    socket.join(joinCode);
+    socket.roomID = joinCode;
+    socket.userId = userId;
+    roomState[joinCode][userId] = [];
+
     console.log(`Room Created: ${joinCode} by ${userId}`);
-    socket.emit("room-created", { joinCode });
+    callback({ success: true, joinCode: joinCode });
   });
 
   // --- 2. JOIN ROOM ---
@@ -74,6 +75,7 @@ io.on("connection", (socket) => {
     socket.join(joinCode);
     socket.roomID = joinCode;
     socket.userId = userId;
+    roomState[joinCode][userId] = [];
 
     console.log(`User ${userId} joined room ${joinCode}`);
 

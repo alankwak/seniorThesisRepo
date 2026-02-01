@@ -136,7 +136,7 @@ class SessionHandler extends HTMLElement {
             });
 
             createButton.addEventListener("click", async () => {
-                createButton.style.display = "none";
+                createButton.disabled = true;
                 const password = this.shadowRoot.getElementById("pwd").value;
                 const response = await chrome.runtime.sendMessage({ action: "createSession", password: password });
                 console.log(response);
@@ -145,7 +145,7 @@ class SessionHandler extends HTMLElement {
                     this.state = "connected";
                 } else if(response && response.error) {
                     alert("Error creating session: " + response.error);
-                    if(response.error == "Already in a session") {
+                    if(response.error === "Already in a session") {
                         this.state = "connected";
                     } else {
                         this.state = "default";
