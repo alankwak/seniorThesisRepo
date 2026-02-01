@@ -7,7 +7,7 @@ let cachedGroupId = null;
 
 async function connectSocket() {
   const { userId } = await chrome.storage.local.get("userId");
-  const { lastRoomId } = await chrome.storage.local.get("activeSessionCode")
+  const { roomId } = await chrome.storage.local.get("activeSessionCode");
 
   return new Promise((resolve, reject) => {
     if(socket && socket.connected) {
@@ -19,16 +19,6 @@ async function connectSocket() {
         reconnection: true,
         reconnectionDelay: 1000,
         transports: ["websocket"]
-      });
-
-      // If we have a saved room, rejoin it automatically
-      if(lastRoomId) {
-        socket.emit("join-room", { joinCode: lastRoomId, userId });
-      }
-
-      socket.on("room-created", (message) => {
-        cachedActiveSessionCode = message.joinCode;
-        chrome.storage.local.set({ activeSessionCode: message.joinCode });
       });
 
       socket.on("disconnect", (reason) => {
@@ -51,7 +41,7 @@ async function connectSocket() {
     }
 
     socket.once("connect", () => {
-      resolve(socket); 
+      resolve(socket);
     });
 
     socket.once("connect_error", (error) => {
@@ -83,6 +73,32 @@ async function createRoom(password) {
         });
       } else {
         reject(new Error(response.error || "Failed to create room"));
+      }
+    });
+  });
+}
+
+async function joinRoom(code, password) {
+  const userId = await getPersistentUserId();
+
+  return new Promise((resolve, reject) => {
+    if (!socket || !socket.connected) {
+      return reject(new Error("Socket not connected. Please connect first."));
+    }
+
+    const timeout = setTimeout(() => {
+      reject(new Error("Server timed out joining room."));
+    }, 10000);
+
+    socket.emit("join-room", { joinCode: code || null, password: password || null, userId: userId }, (response) => {
+      clearTimeout(timeout);
+
+      if(response && response.success) {
+        chrome.storage.local.set({ activeSessionCode: response.joinCode }, () => {
+          resolve(response);
+        });
+      } else {
+        reject(new Error(response.error || "Failed to join room"));
       }
     });
   });
@@ -151,6 +167,29 @@ chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
         try {
           await connectSocket();
           const response = await createRoom(message.password);
+
+          activeSession = true;
+          cachedActiveSessionCode = response.joinCode;
+
+          sendResponse({ success: true, code: response.joinCode });
+        }
+        catch (err) {
+          sendResponse({ success: false, error: err.message || err});
+        }
+      })();
+    }
+
+    return true;
+  }
+  if(message.action === "joinSession") {
+
+    if(activeSession) {
+      sendResponse({ success: false, error: "Already in a session" });
+    } else {
+      (async () => {
+        try {
+          await connectSocket(message.sessionCode);
+          const response = await joinRoom(message.sessionCode, message.password);
 
           activeSession = true;
           cachedActiveSessionCode = response.joinCode;

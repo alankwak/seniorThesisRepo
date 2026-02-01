@@ -163,7 +163,7 @@ class SessionHandler extends HTMLElement {
                 <div class="wrapper">
                   <div class="header"> Join an ongoing session: </div>
                   <div class="wrapper" style="gap: 5px; margin: 10px auto 10px auto;">
-                    7-Character Session Code: <input type="text" id="code" placeholder="Session Code" maxlength="7"> </input>
+                    6-Digit Session Code: <input type="text" id="code" placeholder="Session Code" maxlength="6"> </input>
                   </div>
                   <div class="wrapper" style="gap: 5px; margin: 10px auto 10px auto;">
                     Password: <input type="password" id="pwd" placeholder="Password" maxlength="40"> </input> 
@@ -175,8 +175,32 @@ class SessionHandler extends HTMLElement {
                 </div>
             `;
 
+            const joinButton = this.shadowRoot.getElementById("join");
             this.shadowRoot.getElementById("cancel").addEventListener("click", () => {
                 this.state = "default";
+                this.render();
+            });
+
+            joinButton.addEventListener("click", async () => {
+                joinButton.disabled = true;
+                const sessionCode = this.shadowRoot.getElementById("code").value;
+                const password = this.shadowRoot.getElementById("pwd").value;
+                const response = await chrome.runtime.sendMessage({ action: "joinSession", sessionCode: sessionCode, password: password });
+                console.log(response);
+                if(response && response.success) {
+                    this.sessionCode = sessionCode;
+                    this.state = "connected";
+                } else if(response && response.error) {
+                    alert("Error joining session: " + response.error);
+                    if(response.error === "Already in a session") {
+                        this.state = "connected";
+                    } else {
+                        this.state = "default";
+                    }
+                } else {
+                    alert("Error joining session");
+                    this.state = "default";
+                }
                 this.render();
             });
 

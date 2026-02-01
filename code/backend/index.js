@@ -53,34 +53,37 @@ io.on("connection", (socket) => {
     socket.join(joinCode);
     socket.roomID = joinCode;
     socket.userId = userId;
-    roomState[joinCode][userId] = [];
+    roomState[joinCode].users[userId] = [];
+    console.log(roomState);
 
     console.log(`Room Created: ${joinCode} by ${userId}`);
     callback({ success: true, joinCode: joinCode });
   });
 
   // --- 2. JOIN ROOM ---
-  socket.on("join-room", ({ joinCode, password, userId }) => {
+  socket.on("join-room", ({ joinCode, password, userId }, callback) => {
     const room = roomState[joinCode];
 
     // Validation
     if(!room) {
-      return socket.emit("error-message", "Room not found.");
+      return callback({ success: false, error: "Room not found." });
     }
-    if(room.password && room.password !== password) {
-      return socket.emit("error-message", "Incorrect password.");
+    if(room.password && room.password !== password) { 
+      return callback({ success: false, error: "Incorrect password." });
     }
 
     // Success: Link socket to room metadata
     socket.join(joinCode);
     socket.roomID = joinCode;
     socket.userId = userId;
-    roomState[joinCode][userId] = [];
+    room.users[userId] = [];
+    console.log(roomState);
 
     console.log(`User ${userId} joined room ${joinCode}`);
 
     // Sync everyone in the room
     io.to(joinCode).emit("room-update", room.users);
+    callback({ success: true, joinCode: joinCode });
   });
 
   // --- 3. SHARE TAB / UPDATE URL ---
