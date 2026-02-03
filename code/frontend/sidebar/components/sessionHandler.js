@@ -1,10 +1,9 @@
-class SessionHandler extends HTMLElement {
-    static sessionCode = null;
-    
+class SessionHandler extends HTMLElement {    
     constructor() {
         super();
         this.attachShadow({ mode: "open" });
         this.state = "default";
+        this.statusMessage = "";
     }
 
     async connectedCallback() {
@@ -98,7 +97,7 @@ class SessionHandler extends HTMLElement {
         if(this.state === "default") {
             this.shadowRoot.innerHTML = `
                 ${styles}
-                <div class="wrapper">
+                <div class="wrapper" id="wrapper">
                   <div class="center">
                     <button class="promptButton" id="promptCreate"> Create New Session </button>
                     <button class="promptButton" id="promptJoin"> Join Existing Session </button>
@@ -107,16 +106,18 @@ class SessionHandler extends HTMLElement {
             `;
             this.shadowRoot.getElementById("promptCreate").addEventListener("click", () => {
                 this.state = "create";
+                this.statusMessage = "";
                 this.render();
             });
             this.shadowRoot.getElementById("promptJoin").addEventListener("click", () => {
                 this.state = "join";
+                this.statusMessage = "";
                 this.render();
             });
         } else if(this.state === "create") {
             this.shadowRoot.innerHTML = `
                 ${styles}
-                <div class="wrapper">
+                <div class="wrapper" id="wrapper">
                   <div class="header"> New session: </div>
                   <div class="wrapper" style="gap: 5px; margin: 10px auto 10px auto;">
                     Password (optional):
@@ -139,7 +140,6 @@ class SessionHandler extends HTMLElement {
                 createButton.disabled = true;
                 const password = this.shadowRoot.getElementById("pwd").value;
                 const response = await chrome.runtime.sendMessage({ action: "createSession", password: password });
-                console.log(response);
                 if(response && response.success) {
                     this.sessionCode = response.code;
                     this.state = "connected";
@@ -160,12 +160,12 @@ class SessionHandler extends HTMLElement {
         } else if(this.state === "join") {
             this.shadowRoot.innerHTML = `
                 ${styles}
-                <div class="wrapper">
+                <div class="wrapper" id="wrapper">
                   <div class="header"> Join an ongoing session: </div>
-                  <div class="wrapper" style="gap: 5px; margin: 10px auto 10px auto;">
+                  <div class="wrapper" id="code-div" style="gap: 5px; margin: 10px auto 10px auto;">
                     6-Digit Session Code: <input type="text" id="code" placeholder="Session Code" maxlength="6"> </input>
                   </div>
-                  <div class="wrapper" style="gap: 5px; margin: 10px auto 10px auto;">
+                  <div class="wrapper" id="pwd-div" style="gap: 5px; margin: 10px auto 10px auto; display: none">
                     Password: <input type="password" id="pwd" placeholder="Password" maxlength="40"> </input> 
                   </div>
                   <div class="center">
@@ -186,30 +186,36 @@ class SessionHandler extends HTMLElement {
                 const sessionCode = this.shadowRoot.getElementById("code").value;
                 const password = this.shadowRoot.getElementById("pwd").value;
                 const response = await chrome.runtime.sendMessage({ action: "joinSession", sessionCode: sessionCode, password: password });
-                console.log(response);
                 if(response && response.success) {
                     this.sessionCode = sessionCode;
                     this.state = "connected";
+                    this.render();
                 } else if(response && response.error) {
-                    alert("Error joining session: " + response.error);
-                    if(response.error === "Already in a session") {
+                    // alert("Error joining session: " + response.error);
+                    if(response.error === "Session requires a password.") {
+                        this.shadowRoot.getElementById("code-div").style.display = "none";
+                        this.shadowRoot.getElementById("pwd-div").style.display = "block";
+                        joinButton.disabled = false;
+                    } else if(response.error === "Already in a session.") {
                         this.state = "connected";
+                        this.render();
                     } else {
                         this.state = "default";
+                        this.render();
                     }
                 } else {
                     alert("Error joining session");
                     this.state = "default";
+                    this.render();
                 }
-                this.render();
             });
 
         } else if(this.state === "connected") {
             this.shadowRoot.innerHTML = `
                 ${styles}
-                <div class="wrapper">
+                <div class="wrapper" id="wrapper">
                   <div class="codeDisplay center">
-                    ${this.sessionCode ? this.sessionCode : "_PH_CODE"}
+                    ${this.sessionCode || "_PH_CODE"}
                   </div>
                   <div class="center">
                     <button class="actionButton cancelButton" style="max-width: 50%" id="leave"> Leave Session </button>
@@ -222,6 +228,15 @@ class SessionHandler extends HTMLElement {
                 this.render();
             });
         }
+        
+        this.shadowRoot.getElementById("wrapper").insertAdjacentHTML('beforeend', `<div id="status">${this.statusMessage}</div>`);
+
+        chrome.runtime.onMessage.addListener((message) => {
+            if(message.action === "session_handler_status") {
+                this.statusMessage = message.text;
+                this.render();
+            }
+        });
     }
 }
 

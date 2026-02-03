@@ -68,6 +68,9 @@ io.on("connection", (socket) => {
     if(!room) {
       return callback({ success: false, error: "Room not found." });
     }
+    if(room.password && !password) {
+      return callback({ succes: false, error: "Session requires a password." });
+    }
     if(room.password && room.password !== password) { 
       return callback({ success: false, error: "Incorrect password." });
     }
@@ -83,7 +86,7 @@ io.on("connection", (socket) => {
 
     // Sync everyone in the room
     io.to(joinCode).emit("room-update", room.users);
-    callback({ success: true, joinCode: joinCode });
+    return callback({ success: true, joinCode: joinCode });
   });
 
   // --- 3. SHARE TAB / UPDATE URL ---

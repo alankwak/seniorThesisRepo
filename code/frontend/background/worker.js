@@ -29,13 +29,14 @@ async function connectSocket() {
         activeSession = false;
 
         if (reason === "transport close" || reason === "ping timeout") {
-          showStatusUI("Server is offline. Reconnecting...");
+          showStatusUI("Error connecting to server.");
         } else if (reason === "io client disconnect") {
           showStatusUI("You left the room.");
         }
       });
 
       socket.on("connect_error", (error) => {
+        showStatusUI("Error connecting to server.");
         socket.disconnect();
       });
     }
@@ -172,8 +173,8 @@ chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
           cachedActiveSessionCode = response.joinCode;
 
           sendResponse({ success: true, code: response.joinCode });
-        }
-        catch (err) {
+        } catch(err) {
+          showStatusUI(err.message || err);
           sendResponse({ success: false, error: err.message || err});
         }
       })();
@@ -197,6 +198,7 @@ chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
           sendResponse({ success: true, code: response.joinCode });
         }
         catch (err) {
+          showStatusUI(err.message || err);
           sendResponse({ success: false, error: err.message || err});
         }
       })();
@@ -208,6 +210,15 @@ chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
     disconnectSocket();
   }
 });
+
+function showStatusUI(message) {
+  chrome.runtime.sendMessage({
+    action: "session_handler_status",
+    text: message
+  }).catch(() => {
+    console.log("No elements received status message, status saved to console:", message);
+  });
+}
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if(tab.groupId === cachedGroupId) {
