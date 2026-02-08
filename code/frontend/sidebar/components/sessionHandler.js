@@ -29,6 +29,12 @@ class SessionHandler extends HTMLElement {
                 this.render();
             }
         });
+        chrome.runtime.onMessage.addListener((message) => {
+            if(message.action === "session_handler_status") {
+                this.statusMessage = message.text;
+                this.updateStatusUI();
+            }
+        });
     }
 
     render() {
@@ -186,6 +192,7 @@ class SessionHandler extends HTMLElement {
                 const sessionCode = this.shadowRoot.getElementById("code").value;
                 const password = this.shadowRoot.getElementById("pwd").value;
                 const response = await chrome.runtime.sendMessage({ action: "joinSession", sessionCode: sessionCode, password: password });
+                console.log(sessionCode);
                 if(response && response.success) {
                     this.sessionCode = sessionCode;
                     this.state = "connected";
@@ -228,15 +235,15 @@ class SessionHandler extends HTMLElement {
                 this.render();
             });
         }
-        
-        this.shadowRoot.getElementById("wrapper").insertAdjacentHTML('beforeend', `<div id="status">${this.statusMessage}</div>`);
 
-        chrome.runtime.onMessage.addListener((message) => {
-            if(message.action === "session_handler_status") {
-                this.statusMessage = message.text;
-                this.render();
-            }
-        });
+        this.updateStatusUI();
+    }
+
+    updateStatusUI() {
+        const wrapper = this.shadowRoot.getElementById("wrapper");
+        if(wrapper) {
+            wrapper.insertAdjacentHTML('beforeend', `<div id="status">${this.statusMessage}</div>`);
+        }
     }
 }
 

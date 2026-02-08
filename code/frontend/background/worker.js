@@ -171,10 +171,11 @@ chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
 
           activeSession = true;
           cachedActiveSessionCode = response.joinCode;
+          showStatusUI("Room created.");
 
           sendResponse({ success: true, code: response.joinCode });
         } catch(err) {
-          showStatusUI(err.message || err);
+          if(err.message) showStatusUI(err.message);
           sendResponse({ success: false, error: err.message || err});
         }
       })();
@@ -194,11 +195,12 @@ chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
 
           activeSession = true;
           cachedActiveSessionCode = response.joinCode;
+          showStatusUI("Joined room.");
 
           sendResponse({ success: true, code: response.joinCode });
         }
         catch (err) {
-          showStatusUI(err.message || err);
+          if(err.message) showStatusUI(err.message);
           sendResponse({ success: false, error: err.message || err});
         }
       })();
