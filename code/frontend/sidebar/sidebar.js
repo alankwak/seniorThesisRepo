@@ -4,30 +4,6 @@ const cancelGroupButton = document.getElementById("cancelGroup");
 const tabTable = document.getElementById("tabSelection");
 const localTable = document.getElementById("localTabs");
 
-// document.getElementById("create").addEventListener("click", async () => {
-//   try {
-//     // const userId = await new Promise((resolve) => {
-//     //   chrome.runtime.sendMessage({ action: "getUserId" }, resolve);
-//     // });
-//     // const res = await fetch("http://localhost:53140/api/session/create", { 
-//     //   method: "POST", 
-//     //   body: JSON.stringify({
-//     //     creator: userId
-//     //   }),
-//     //   headers: { "Content-Type": "application/json" }
-//     // });
-//     // const data = await res.json();
-//     chrome.tabs.create({ url: "https://www.google.com" }, (newTab) => {
-//       chrome.tabs.group({tabIds: newTab.id}, (newGroup) => {
-//         chrome.runtime.sendMessage({ action: "updateGroupId", message: newGroup});
-//         chrome.tabGroups.update(newGroup, {color: "blue", title: "CoTab" });
-//       });
-//     });
-//   } catch (err) {
-//     console.error("Error creating session:", err);
-//   }
-// });
-
 startGroupButton.addEventListener("click", async () => {
   updateTabTable();
   startGroupButton.style.display = "none";
@@ -81,6 +57,13 @@ chrome.tabGroups.onCreated.addListener(() => {
 });
 
 document.addEventListener("DOMContentLoaded", updateLocalTable);
+document.addEventListener("DOMContentLoaded", updateRoomState);
+
+chrome.runtime.onMessage.addListener( (message) => {
+  if(message.action === "room-update") {
+    updateRoomState();
+  }
+});
 
 async function updateTabTable() {
   const currentTabs = await chrome.tabs.query({groupId: chrome.tabGroups.TAB_GROUP_ID_NONE});
@@ -91,4 +74,31 @@ async function updateLocalTable() {
   const groupId = await chrome.runtime.sendMessage({action: "getGroupId"});
   const tabsInGroup = groupId ? await chrome.tabs.query({groupId: groupId}) : [];
   localTable.data = tabsInGroup.map((tab) => [tab.id, tab.favIconUrl || "", tab.title, tab.url]);
+}
+
+async function updateRoomState() {
+  const roomState = await chrome.runtime.sendMessage({action: "getRoomState"});
+  if(roomState) {
+    const listContainer = document.getElementById("other-users");
+      listContainer.replaceChildren();
+      Object.values(roomState).forEach(user => {
+        if(user.tabs.length > 0) {
+          const userSection = document.createElement('div');
+          userSection.classList.add("user-section");
+          const userLabel = document.createElement('div');
+          userLabel.classList.add("user-label");
+          userLabel.textContent = user.nickname;
+          const tableSection = document.createElement('div');
+          tableSection.classList.add("table-section");
+          const tabTable = document.createElement('non-selectable-table');
+          tabTable.data = user.tabs;
+          tableSection.appendChild(tabTable);
+          userSection.appendChild(userLabel);
+          userSection.appendChild(tableSection);
+          listContainer.appendChild(userSection);
+
+          listContainer.appendChild(userSection);
+        }
+      });
+  }
 }

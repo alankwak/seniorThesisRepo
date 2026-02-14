@@ -21,8 +21,14 @@ const io = new Server(3000, {
 //   "482931": {
 //   password: "xyz" || null,
 //   users: {
-//     "user-uuid-1": ["https://google.com", ...],
-//     "user-uuid-2": ["https://github.com", ...]
+//     "user-uuid-1": {
+//                      nickname: "john",
+//                      tabs: ["https://google.com", ...],
+//                    }
+//     "user-uuid-2": {
+//                      nickname: "jane",
+//                      tabs: ["https://google.com", ...],
+//                    }
 //     }
 //   }
 // };
@@ -38,8 +44,6 @@ io.on("connection", (socket) => {
   socket.on("create-room", ({ password, userId }, callback) => {
     let joinCode = generateJoinCode();
 
-    console.log(userId);
-
     // Ensure code is unique
     while(roomState[joinCode]) {
       joinCode = generateJoinCode();
@@ -53,7 +57,7 @@ io.on("connection", (socket) => {
     socket.join(joinCode);
     socket.roomID = joinCode;
     socket.userId = userId;
-    roomState[joinCode].users[userId] = [];
+    roomState[joinCode].users[userId] = {nickname: `Session Leader`, tabs: []};
     console.log(roomState);
 
     console.log(`Room Created: ${joinCode} by ${userId}`);
@@ -79,7 +83,7 @@ io.on("connection", (socket) => {
     socket.join(joinCode);
     socket.roomID = joinCode;
     socket.userId = userId;
-    room.users[userId] = [];
+    room.users[userId] = {nickname: `User ${Object.keys(room.users).length}`, tabs: []};
     console.log(roomState);
 
     console.log(`User ${userId} joined room ${joinCode}`);
@@ -90,11 +94,12 @@ io.on("connection", (socket) => {
   });
 
   // --- 3. SHARE TAB / UPDATE URL ---
-  socket.on("share-tab", ({ url }) => {
+  socket.on("share-tabs", (tabsInfo) => {
     const { roomID, userId } = socket;
+    console.log(`tabs shared by ${userId}`, tabsInfo);
 
     if(roomID && roomState[roomID]) {
-      roomState[roomID].users[userId] = url;
+      roomState[roomID].users[userId].tabs = tabsInfo;
       
       // Broadcast the fresh state to the whole room
       io.to(roomID).emit("room-update", roomState[roomID].users);
@@ -112,11 +117,9 @@ io.on("connection", (socket) => {
       const remainingUsers = Object.keys(roomState[roomID].users).length;
       
       if(remainingUsers === 0) {
-        // Delete room after last user leaves
         delete roomState[roomID];
         console.log(`Room ${roomID} cleared from memory.`);
       } else {
-        // Update remaining users
         io.to(roomID).emit("room-update", roomState[roomID].users);
       }
     }

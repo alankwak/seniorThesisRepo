@@ -4,6 +4,9 @@ let socket;
 let activeSession = false;
 let cachedActiveSessionCode = null;
 let cachedGroupId = null;
+let cachedRoomState = null;
+
+// sockets
 
 async function connectSocket() {
   const { userId } = await chrome.storage.local.get("userId");
@@ -27,12 +30,24 @@ async function connectSocket() {
         chrome.storage.local.remove(["activeSessionCode"]);
         cachedActiveSessionCode = null;
         activeSession = false;
+        cachedRoomState = null;
 
         if (reason === "transport close" || reason === "ping timeout") {
           showStatusUI("Error connecting to server.");
         } else if (reason === "io client disconnect") {
           showStatusUI("You left the room.");
         }
+      });
+
+      socket.on("room-update", (users) => {
+        delete users[userId];
+        chrome.runtime.sendMessage({
+          action: "room-update",
+          data: users
+        }).catch(() => {
+          console.log("No elements received room update");
+        });
+        cachedRoomState = users;
       });
 
       socket.on("connect_error", (error) => {
@@ -116,6 +131,16 @@ async function disconnectSocket() {
   await chrome.storage.local.remove(["activeSessionCode"]);
 }
 
+async function sendTabsToServer() {
+  if(socket) {
+    const tabsInGroup = cachedGroupId ? await chrome.tabs.query({groupId: cachedGroupId}) : [];
+    const tabsInfo = tabsInGroup.map((tab) => [tab.id, tab.favIconUrl || "", tab.title, tab.url]);
+    socket.emit("share-tabs", tabsInfo);
+  }
+}
+
+// state
+
 async function getPersistentUserId() {
   const data = await chrome.storage.local.get("userId");
   
@@ -139,6 +164,8 @@ chrome.storage.local.get("sharedGroupId", data => {
   cachedGroupId = data.sharedGroupId || null;
 });
 
+// runtime listener
+
 chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
   // if (message.action === "getUserId") {
   //   if (cachedUserId) {
@@ -149,17 +176,23 @@ chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
   if(message.action === "getSessionStatus") {
     sendResponse(activeSession);
   }
-  if(message.action === "getSessionCode") {
+  else if(message.action === "getSessionCode") {
     sendResponse(cachedActiveSessionCode);
   }
-  if(message.action === "updateGroupId") {
+  else if(message.action === "getRoomState") {
+    sendResponse(cachedRoomState);
+  }
+  else if(message.action === "updateGroupId") {
     cachedGroupId = message.message || null;
     chrome.storage.local.set({ sharedGroupId: cachedGroupId });
+    if(socket) {
+      sendTabsToServer();
+    }
   }
-  if(message.action === "getGroupId") {
+  else if(message.action === "getGroupId") {
     sendResponse(cachedGroupId);
   }
-  if(message.action === "createSession") {
+  else if(message.action === "createSession") {
 
     if(activeSession) {
       sendResponse({ success: false, error: "Already in a session" });
@@ -183,7 +216,7 @@ chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
 
     return true;
   }
-  if(message.action === "joinSession") {
+  else if(message.action === "joinSession") {
 
     if(activeSession) {
       sendResponse({ success: false, error: "Already in a session" });
@@ -208,7 +241,7 @@ chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
 
     return true;
   }
-  if(message.action === "leaveSession") {
+  else if(message.action === "leaveSession") {
     disconnectSocket();
   }
 });
@@ -218,23 +251,20 @@ function showStatusUI(message) {
     action: "session_handler_status",
     text: message
   }).catch(() => {
-    console.log("No elements received status message, status saved to console:", message);
+    console.log("No elements received status message:", message);
   });
 }
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if(tab.groupId === cachedGroupId) {
-    console.log("New tab in group");
-    if(changeInfo.url) {
-      console.log(`New URL: ${changeInfo.url}`);
-    }
+  if((tab.groupId === cachedGroupId && (changeInfo.url || changeInfo.groupId)) || changeInfo.groupId === -1) {
+    sendTabsToServer();
   }
 });
 
 chrome.tabGroups.onRemoved.addListener( async (tabGroup) => {
   if(tabGroup.id === cachedGroupId) {
     const stillExists = await chrome.tabs.query({groupId: cachedGroupId});
-    if(stillExists.length == 0) {
+    if(stillExists.length === 0) {
       cachedGroupId = null;
       chrome.storage.local.remove("sharedGroupId");
     }
