@@ -34,20 +34,17 @@ async function connectSocket() {
 
         if (reason === "transport close" || reason === "ping timeout") {
           showStatusUI("Error connecting to server.");
-        } else if (reason === "io client disconnect") {
-          showStatusUI("You left the room.");
         }
       });
 
       socket.on("room-update", (users) => {
         delete users[userId];
+        cachedRoomState = users;
         chrome.runtime.sendMessage({
           action: "room-update",
-          data: users
         }).catch(() => {
           console.log("No elements received room update");
         });
-        cachedRoomState = users;
       });
 
       socket.on("connect_error", (error) => {
@@ -128,7 +125,13 @@ async function disconnectSocket() {
 
   activeSession = false;
   cachedActiveSessionCode = null;
+  cachedRoomState = null;
   await chrome.storage.local.remove(["activeSessionCode"]);
+  chrome.runtime.sendMessage({
+    action: "room-update",
+  }).catch(() => {
+    console.log("No elements received room update");
+  });
 }
 
 async function sendTabsToServer() {

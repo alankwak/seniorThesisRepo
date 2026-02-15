@@ -108,6 +108,7 @@ class SessionHandler extends HTMLElement {
                     <button class="promptButton" id="promptCreate"> Create New Session </button>
                     <button class="promptButton" id="promptJoin"> Join Existing Session </button>
                   </div>
+                  <div class="status" id="status" ></div>
                 </div>
             `;
             this.shadowRoot.getElementById("promptCreate").addEventListener("click", () => {
@@ -133,6 +134,7 @@ class SessionHandler extends HTMLElement {
                     <button class="actionButton confirmButton" id="create"> Create </button>
                     <button class="actionButton cancelButton" id="cancel"> Cancel </button>
                   </div>
+                  <div class="status" id="status" ></div>
                 </div>
             `;
 
@@ -154,10 +156,12 @@ class SessionHandler extends HTMLElement {
                     if(response.error === "Already in a session") {
                         this.state = "connected";
                     } else {
+                        chrome.runtime.sendMessage({ action: "leaveSession" });
                         this.state = "default";
                     }
                 } else {
                     alert("Error creating session");
+                    chrome.runtime.sendMessage({ action: "leaveSession" });
                     this.state = "default";
                 }
                 this.render();
@@ -178,6 +182,7 @@ class SessionHandler extends HTMLElement {
                     <button class="actionButton confirmButton" id="join"> Join </button>
                     <button class="actionButton cancelButton" id="cancel"> Cancel </button>
                   </div>
+                  <div class="status" id="status" ></div>
                 </div>
             `;
 
@@ -207,11 +212,13 @@ class SessionHandler extends HTMLElement {
                         this.state = "connected";
                         this.render();
                     } else {
+                        chrome.runtime.sendMessage({ action: "leaveSession" });
                         this.state = "default";
                         this.render();
                     }
                 } else {
                     alert("Error joining session");
+                    chrome.runtime.sendMessage({ action: "leaveSession" });
                     this.state = "default";
                     this.render();
                 }
@@ -227,10 +234,12 @@ class SessionHandler extends HTMLElement {
                   <div class="center">
                     <button class="actionButton cancelButton" style="max-width: 50%" id="leave"> Leave Session </button>
                   </div>
+                  <div class="status" id="status" ></div>
                 </div>
             `;
             this.shadowRoot.getElementById("leave").addEventListener("click", () => {
                 chrome.runtime.sendMessage({ action: "leaveSession" });
+                this.statusMessage = "Left the session.";
                 this.state = "default";
                 this.render();
             });
@@ -240,9 +249,9 @@ class SessionHandler extends HTMLElement {
     }
 
     updateStatusUI() {
-        const wrapper = this.shadowRoot.getElementById("wrapper");
-        if(wrapper) {
-            wrapper.insertAdjacentHTML('beforeend', `<div id="status">${this.statusMessage}</div>`);
+        const status = this.shadowRoot.getElementById("status");
+        if(status) {
+            status.textContent = this.statusMessage;
         }
     }
 }

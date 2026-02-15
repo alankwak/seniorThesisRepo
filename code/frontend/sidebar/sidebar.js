@@ -78,27 +78,27 @@ async function updateLocalTable() {
 
 async function updateRoomState() {
   const roomState = await chrome.runtime.sendMessage({action: "getRoomState"});
+  const listContainer = document.getElementById("other-users");
+  listContainer.replaceChildren();
   if(roomState) {
-    const listContainer = document.getElementById("other-users");
-      listContainer.replaceChildren();
-      Object.values(roomState).forEach(user => {
-        if(user.tabs.length > 0) {
-          const userSection = document.createElement('div');
-          userSection.classList.add("user-section");
-          const userLabel = document.createElement('div');
-          userLabel.classList.add("user-label");
-          userLabel.textContent = user.nickname;
-          const tableSection = document.createElement('div');
-          tableSection.classList.add("table-section");
-          const tabTable = document.createElement('non-selectable-table');
-          tabTable.data = user.tabs;
-          tableSection.appendChild(tabTable);
-          userSection.appendChild(userLabel);
-          userSection.appendChild(tableSection);
-          listContainer.appendChild(userSection);
+    Object.values(roomState).forEach(user => {
+      if(user.tabs.length > 0) {
+        const userSection = document.createElement('div');
+        userSection.classList.add("user-section");
+        const userLabel = document.createElement('div');
+        userLabel.classList.add("user-label");
+        userLabel.textContent = user.nickname;
+        const tableSection = document.createElement('div');
+        tableSection.classList.add("table-section");
+        const tabTable = document.createElement('non-selectable-table');
+        tabTable.data = user.tabs;
+        tableSection.appendChild(tabTable);
+        userSection.appendChild(userLabel);
+        userSection.appendChild(tableSection);
+        listContainer.appendChild(userSection);
 
-          listContainer.appendChild(userSection);
-        }
-      });
+        listContainer.appendChild(userSection);
+      }
+    });
   }
 }
