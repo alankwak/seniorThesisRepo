@@ -5,6 +5,7 @@ let activeSession = false;
 let cachedActiveSessionCode = null;
 let cachedGroupId = null;
 let cachedRoomState = null;
+let nickname = "Anonymous User";
 
 // sockets
 
@@ -103,7 +104,7 @@ async function joinRoom(code, password) {
       reject(new Error("Server timed out joining room."));
     }, 10000);
 
-    socket.emit("join-room", { joinCode: code || null, password: password || null, userId: userId }, (response) => {
+    socket.emit("join-room", { joinCode: code || null, password: password || null, userId: userId, nickname: nickname }, (response) => {
       clearTimeout(timeout);
 
       if(response && response.success) {
@@ -167,6 +168,10 @@ chrome.storage.local.get("sharedGroupId", data => {
   cachedGroupId = data.sharedGroupId || null;
 });
 
+chrome.storage.local.get("nickname", data => {
+  nickname = data.nickname || "Anonymous User";
+});
+
 // runtime listener
 
 chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
@@ -184,6 +189,16 @@ chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
   }
   else if(message.action === "getRoomState") {
     sendResponse(cachedRoomState);
+  }
+  else if(message.action === "setNickname") {
+    nickname = message.nickname || "Anonymous User";
+    chrome.storage.local.set({ nickname: nickname });
+    if(socket){
+      socket.emit("update-nickname", nickname);
+    }
+  }
+  else if(message.action === "getNickname") {
+    sendResponse(nickname);
   }
   else if(message.action === "updateGroupId") {
     cachedGroupId = message.message || null;

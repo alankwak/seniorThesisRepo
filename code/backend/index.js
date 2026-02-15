@@ -41,7 +41,7 @@ io.on("connection", (socket) => {
   console.log(`Connection established: ${socket.id}`);
 
   // --- 1. CREATE ROOM ---
-  socket.on("create-room", ({ password, userId }, callback) => {
+  socket.on("create-room", ({ password, userId, nickname }, callback) => {
     let joinCode = generateJoinCode();
 
     // Ensure code is unique
@@ -57,7 +57,7 @@ io.on("connection", (socket) => {
     socket.join(joinCode);
     socket.roomID = joinCode;
     socket.userId = userId;
-    roomState[joinCode].users[userId] = {nickname: `Session Leader`, tabs: []};
+    roomState[joinCode].users[userId] = {nickname: nickname, tabs: []};
     console.log(roomState);
 
     console.log(`Room Created: ${joinCode} by ${userId}`);
@@ -65,7 +65,7 @@ io.on("connection", (socket) => {
   });
 
   // --- 2. JOIN ROOM ---
-  socket.on("join-room", ({ joinCode, password, userId }, callback) => {
+  socket.on("join-room", ({ joinCode, password, userId, nickname }, callback) => {
     const room = roomState[joinCode];
 
     // Validation
@@ -83,7 +83,7 @@ io.on("connection", (socket) => {
     socket.join(joinCode);
     socket.roomID = joinCode;
     socket.userId = userId;
-    room.users[userId] = {nickname: `User ${Object.keys(room.users).length}`, tabs: []};
+    room.users[userId] = {nickname: nickname, tabs: []};
     console.log(roomState);
 
     console.log(`User ${userId} joined room ${joinCode}`);
@@ -103,6 +103,17 @@ io.on("connection", (socket) => {
       
       // Broadcast the fresh state to the whole room
       io.to(roomID).emit("room-update", roomState[roomID].users);
+    }
+  });
+
+  socket.on("update-nickname", (nickname) => {
+    const { roomID, userId } = socket;
+    if(roomID && roomState[roomID] && roomState[roomID].users[userId]) {
+      roomState[roomID].users[userId].nickname = nickname;
+      console.log(`nickname update by ${userId}: ${nickname}`);
+      io.to(roomID).emit("room-update", roomState[roomID].users);
+    } else {
+      console.warn(`Nickname update failed for ${userId} - no room or user found.`);
     }
   });
 

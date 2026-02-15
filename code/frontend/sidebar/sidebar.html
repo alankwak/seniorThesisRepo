@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sidebar</title>
   <link rel="stylesheet" href="sidebar.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <script src="components/selectableTable.js"></script>
   <script src="components/nonselectableTable.js"></script>
   <script src="components/sessionHandler.js"></script>
@@ -19,7 +20,13 @@
     <h2>Shared Tabs</h2>
 
     <div class="user-section">
-      <div class="user-label">You:</div>
+      <div class="user-label">You ( 
+        <span id="nickname-display"></span>
+        <input id="nickname-input" hidden>
+
+        <button class="fa fa-edit edit-nickname-button" id="edit-nickname"></button>
+        <button class="fa fa-save edit-nickname-button" id="save-nickname" style="display: none"></button>
+        ):</div>
     </div>
 
     <div class="table-section">
@@ -37,9 +44,7 @@
     </div>
   </section>
 
-  <section class="shared-tabs" id="other-users">
-
-  </section>
+  <section class="shared-tabs" id="other-users"></section>
 
   <script src="sidebar.js"></script>
 </body>

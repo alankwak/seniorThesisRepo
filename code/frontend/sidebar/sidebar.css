@@ -25,6 +25,34 @@ body {
   font-size: 12pt;
 }
 
+.edit-nickname-button {
+  margin-left: 8px;
+  font-size: 12pt;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: #1d4f2c;
+}
+
+.input-readonly {
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    outline: none;
+    pointer-events: none;
+    color: inherit;
+    font: inherit;
+}
+
+.input-editable {
+    border: 1px solid #ccc;
+    background: #fff;
+    padding: 4px 6px;
+    outline: auto;
+    pointer-events: auto;
+}
+
 /* --- Controls --- */
 
 .controls {

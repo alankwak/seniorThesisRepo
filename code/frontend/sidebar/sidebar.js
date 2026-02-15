@@ -3,6 +3,8 @@ const confirmGroupButton = document.getElementById("confirmGroup");
 const cancelGroupButton = document.getElementById("cancelGroup");
 const tabTable = document.getElementById("tabSelection");
 const localTable = document.getElementById("localTabs");
+const updateNicknameButton = document.getElementById("edit-nickname");
+const saveNicknameButton = document.getElementById("save-nickname");
 
 startGroupButton.addEventListener("click", async () => {
   updateTabTable();
@@ -38,6 +40,30 @@ cancelGroupButton.addEventListener("click", () => {
   startGroupButton.style.display = "block";
 });
 
+updateNicknameButton.addEventListener("click", async () => {
+  const nicknameSpan = document.getElementById("nickname-display");
+  const nicknameInput = document.getElementById("nickname-input");
+  nicknameInput.value = nicknameSpan.textContent;
+  nicknameSpan.style.display = "none";
+  nicknameInput.style.display = "inline-block";
+  updateNicknameButton.style.display = "none";
+  saveNicknameButton.style.display = "inline-block";
+});
+
+saveNicknameButton.addEventListener("click", async () => {
+  const nicknameSpan = document.getElementById("nickname-display");
+  const nicknameInput = document.getElementById("nickname-input");
+  const newNickname = nicknameInput.value.trim();
+  if(newNickname.length > 0) {
+    nicknameSpan.textContent = newNickname;
+    chrome.runtime.sendMessage({ action: "setNickname", nickname: newNickname });
+  }
+  nicknameSpan.style.display = "inline-block";
+  nicknameInput.style.display = "none";
+  updateNicknameButton.style.display = "inline-block";
+  saveNicknameButton.style.display = "none";
+});
+
 chrome.tabs.onUpdated.addListener(() => {
   updateTabTable();
   updateLocalTable();
@@ -58,6 +84,7 @@ chrome.tabGroups.onCreated.addListener(() => {
 
 document.addEventListener("DOMContentLoaded", updateLocalTable);
 document.addEventListener("DOMContentLoaded", updateRoomState);
+document.addEventListener("DOMContentLoaded", updateNickname);
 
 chrome.runtime.onMessage.addListener( (message) => {
   if(message.action === "room-update") {
@@ -101,4 +128,10 @@ async function updateRoomState() {
       }
     });
   }
+}
+
+async function updateNickname() {
+  const nickname = await chrome.runtime.sendMessage({ action: "getNickname" });
+  const nicknameSpan = document.getElementById("nickname-display");
+  if(nicknameSpan) nicknameSpan.textContent = nickname;
 }
