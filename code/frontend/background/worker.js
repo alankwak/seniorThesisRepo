@@ -50,7 +50,7 @@ async function connectSocket() {
 
       socket.on("connect_error", (error) => {
         showStatusUI("Error connecting to server.");
-        socket.disconnect();
+        disconnectSocket();
       });
     }
 
@@ -78,7 +78,7 @@ async function createRoom(password) {
       reject(new Error("Server timed out creating room."));
     }, 10000);
 
-    socket.emit("create-room", { password: password || null, userId: userId }, (response) => {
+    socket.emit("create-room", { password: password || null, userId: userId, nickname: nickname }, (response) => {
       clearTimeout(timeout);
 
       if(response && response.success) {

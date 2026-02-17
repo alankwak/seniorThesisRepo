@@ -188,6 +188,7 @@ class SessionHandler extends HTMLElement {
 
             const joinButton = this.shadowRoot.getElementById("join");
             this.shadowRoot.getElementById("cancel").addEventListener("click", () => {
+                chrome.runtime.sendMessage({ action: "leaveSession" });
                 this.state = "default";
                 this.render();
             });
@@ -197,7 +198,6 @@ class SessionHandler extends HTMLElement {
                 const sessionCode = this.shadowRoot.getElementById("code").value;
                 const password = this.shadowRoot.getElementById("pwd").value;
                 const response = await chrome.runtime.sendMessage({ action: "joinSession", sessionCode: sessionCode, password: password });
-                console.log(sessionCode);
                 if(response && response.success) {
                     this.sessionCode = sessionCode;
                     this.state = "connected";
@@ -205,6 +205,7 @@ class SessionHandler extends HTMLElement {
                 } else if(response && response.error) {
                     // alert("Error joining session: " + response.error);
                     if(response.error === "Session requires a password.") {
+                        chrome.runtime.sendMessage({ action: "leaveSession" });
                         this.shadowRoot.getElementById("code-div").style.display = "none";
                         this.shadowRoot.getElementById("pwd-div").style.display = "block";
                         joinButton.disabled = false;
