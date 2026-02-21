@@ -274,7 +274,7 @@ function showStatusUI(message) {
 }
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if((tab.groupId === cachedGroupId && (changeInfo.url || changeInfo.groupId)) || changeInfo.groupId === -1) {
+  if((tab.groupId === cachedGroupId && (changeInfo.url || changeInfo.groupId || changeInfo.title)) || changeInfo.groupId === -1) {
     sendTabsToServer();
   }
 });

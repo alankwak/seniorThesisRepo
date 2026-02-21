@@ -25,6 +25,24 @@ body {
   font-size: 12pt;
 }
 
+.user-header {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.open-button {
+    cursor: pointer;
+    height: 35px;
+    font-size: 11px;
+    width: 20%;
+    font-weight: 600;
+    border-radius: 9px;
+    padding: auto;
+    background-color:rgb(214, 70, 202);
+    color: white;
+}
+
 .edit-nickname-button {
   margin-left: 8px;
   font-size: 12pt;

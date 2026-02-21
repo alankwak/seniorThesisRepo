@@ -98,9 +98,11 @@ async function updateTabTable() {
 }
 
 async function updateLocalTable() {
-  const groupId = await chrome.runtime.sendMessage({action: "getGroupId"});
-  const tabsInGroup = groupId ? await chrome.tabs.query({groupId: groupId}) : [];
-  localTable.data = tabsInGroup.map((tab) => [tab.id, tab.favIconUrl || "", tab.title, tab.url]);
+  setTimeout(async () => {
+    const groupId = await chrome.runtime.sendMessage({action: "getGroupId"});
+    const tabsInGroup = groupId ? await chrome.tabs.query({groupId: groupId}) : [];
+    localTable.data = tabsInGroup.map((tab) => [tab.id, tab.favIconUrl || "", tab.title, tab.url]);
+  }, 50)
 }
 
 async function updateRoomState() {
@@ -112,18 +114,48 @@ async function updateRoomState() {
       if(user.tabs.length > 0) {
         const userSection = document.createElement('div');
         userSection.classList.add("user-section");
+
+        const userHeader = document.createElement('div');
+        userHeader.classList.add("user-header");
+
         const userLabel = document.createElement('div');
         userLabel.classList.add("user-label");
         userLabel.textContent = user.nickname;
+
+        const openAll = document.createElement('button');
+        openAll.classList.add("open-button");
+        openAll.textContent = "Open All";
+        openAll.addEventListener("click", async () => {
+            console.log("Button clicked for:", user.nickname);
+            const createdTabs = await Promise.all(
+              user.tabs.map(tab => chrome.tabs.create({ url: tab[3] }))
+            );
+            const tabIds = createdTabs.map(tab => tab.id);
+            console.log(tabIds);
+            chrome.tabs.group({tabIds: tabIds}, async (newGroup) => {
+              await chrome.tabGroups.update(newGroup, {color: "red", title: `CoTab - ${user.nickname}` });
+            });
+        });
+
+        const followAlong = document.createElement('button');
+        followAlong.classList.add("open-button");
+        followAlong.textContent = "Follow Along";
+        followAlong.addEventListener("click", () => {
+            console.log("Button clicked for:", user.nickname);
+        });
+
+        userHeader.appendChild(userLabel);
+        userHeader.appendChild(openAll);
+        userHeader.appendChild(followAlong);
+
         const tableSection = document.createElement('div');
         tableSection.classList.add("table-section");
         const tabTable = document.createElement('non-selectable-table');
         tabTable.data = user.tabs;
         tableSection.appendChild(tabTable);
-        userSection.appendChild(userLabel);
-        userSection.appendChild(tableSection);
-        listContainer.appendChild(userSection);
 
+        userSection.appendChild(userHeader);
+        userSection.appendChild(tableSection);
         listContainer.appendChild(userSection);
       }
     });
