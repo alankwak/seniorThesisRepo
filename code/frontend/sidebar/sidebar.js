@@ -120,10 +120,13 @@ async function updateRoomState() {
 
         const userLabel = document.createElement('div');
         userLabel.classList.add("user-label");
+        userLabel.style.borderBottomColor = user.color;
+        userLabel.style.color = user.color;
         userLabel.textContent = user.nickname;
 
         const openAll = document.createElement('button');
         openAll.classList.add("open-button");
+        openAll.style.backgroundColor = user.color;
         openAll.textContent = "Open All";
         openAll.addEventListener("click", async () => {
             console.log("Button clicked for:", user.nickname);
@@ -133,12 +136,13 @@ async function updateRoomState() {
             const tabIds = createdTabs.map(tab => tab.id);
             console.log(tabIds);
             chrome.tabs.group({tabIds: tabIds}, async (newGroup) => {
-              await chrome.tabGroups.update(newGroup, {color: "red", title: `CoTab - ${user.nickname}` });
+              await chrome.tabGroups.update(newGroup, {color: user.color, title: `CoTab - ${user.nickname}` });
             });
         });
 
         const followAlong = document.createElement('button');
         followAlong.classList.add("open-button");
+        followAlong.style.backgroundColor = user.color;
         followAlong.textContent = "Follow Along";
         followAlong.addEventListener("click", () => {
             console.log("Button clicked for:", user.nickname);

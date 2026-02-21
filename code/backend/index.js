@@ -36,6 +36,8 @@ const roomState = {};
 
 // Helper to generate a random 6-digit code
 const generateJoinCode = () => Math.floor(100000 + Math.random() * 900000).toString();
+// Colors to randomly assign each user
+const colors = ["blue", "red", "green", "purple"];
 
 io.on("connection", (socket) => {
   console.log(`Connection established: ${socket.id}`);
@@ -57,7 +59,7 @@ io.on("connection", (socket) => {
     socket.join(joinCode);
     socket.roomID = joinCode;
     socket.userId = userId;
-    roomState[joinCode].users[userId] = {nickname: nickname, tabs: []};
+    roomState[joinCode].users[userId] = {nickname: nickname, tabs: [], color: colors[Math.floor(Math.random() * colors.length)]};
     console.log(roomState);
 
     console.log(`Room Created: ${joinCode} by ${userId}`);
@@ -79,11 +81,10 @@ io.on("connection", (socket) => {
       return callback({ success: false, error: "Incorrect password." });
     }
 
-    // Success: Link socket to room metadata
     socket.join(joinCode);
     socket.roomID = joinCode;
     socket.userId = userId;
-    room.users[userId] = {nickname: nickname, tabs: []};
+    room.users[userId] = {nickname: nickname, tabs: [], color: colors[Math.floor(Math.random() * colors.length)]};
     console.log(roomState);
 
     console.log(`User ${userId} joined room ${joinCode}`);
