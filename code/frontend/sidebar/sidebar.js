@@ -110,7 +110,7 @@ async function updateRoomState() {
   const listContainer = document.getElementById("other-users");
   listContainer.replaceChildren();
   if(roomState) {
-    Object.values(roomState).forEach(user => {
+    Object.entries(roomState).forEach(([userId, user]) => {
       if(user.tabs.length > 0) {
         const userSection = document.createElement('div');
         userSection.classList.add("user-section");
@@ -129,14 +129,16 @@ async function updateRoomState() {
         openAll.style.backgroundColor = user.color;
         openAll.textContent = "Open All";
         openAll.addEventListener("click", async () => {
-            console.log("Button clicked for:", user.nickname);
+            const groupId = await chrome.runtime.sendMessage({ action: "getUsersGroupId", userId: userId });
             const createdTabs = await Promise.all(
               user.tabs.map(tab => chrome.tabs.create({ url: tab[3] }))
             );
             const tabIds = createdTabs.map(tab => tab.id);
-            console.log(tabIds);
-            chrome.tabs.group({tabIds: tabIds}, async (newGroup) => {
-              await chrome.tabGroups.update(newGroup, {color: user.color, title: `CoTab - ${user.nickname}` });
+            chrome.tabs.group({tabIds: tabIds, groupId: groupId}, async (newGroupId) => {
+              if(!groupId) {
+                await chrome.tabGroups.update(newGroupId, {color: user.color, title: `CoTab - ${user.nickname}`});
+                await chrome.runtime.sendMessage({ action: "setUsersGroupId", userId: userId, groupId: newGroupId });
+              }
             });
         });
 

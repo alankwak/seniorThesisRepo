@@ -23,10 +23,12 @@ const io = new Server(3000, {
 //   users: {
 //     "user-uuid-1": {
 //                      nickname: "john",
+//                      color: "blue",
 //                      tabs: ["https://google.com", ...],
 //                    }
 //     "user-uuid-2": {
 //                      nickname: "jane",
+//                      color: "red",
 //                      tabs: ["https://google.com", ...],
 //                    }
 //     }
@@ -37,7 +39,7 @@ const roomState = {};
 // Helper to generate a random 6-digit code
 const generateJoinCode = () => Math.floor(100000 + Math.random() * 900000).toString();
 // Colors to randomly assign each user
-const colors = ["blue", "red", "green", "purple"];
+const colors = ["blue", "red", "green", "purple", "orange"];
 
 io.on("connection", (socket) => {
   console.log(`Connection established: ${socket.id}`);
@@ -59,7 +61,11 @@ io.on("connection", (socket) => {
     socket.join(joinCode);
     socket.roomID = joinCode;
     socket.userId = userId;
-    roomState[joinCode].users[userId] = {nickname: nickname, tabs: [], color: colors[Math.floor(Math.random() * colors.length)]};
+    roomState[joinCode].users[userId] = {
+      nickname: nickname, 
+      tabs: [], 
+      color: colors[Math.floor(Math.random() * colors.length)]
+    };
     console.log(roomState);
 
     console.log(`Room Created: ${joinCode} by ${userId}`);
@@ -75,7 +81,7 @@ io.on("connection", (socket) => {
       return callback({ success: false, error: "Room not found." });
     }
     if(room.password && !password) {
-      return callback({ succes: false, error: "Session requires a password." });
+      return callback({ success: false, error: "Session requires a password." });
     }
     if(room.password && room.password !== password) { 
       return callback({ success: false, error: "Incorrect password." });
@@ -84,7 +90,12 @@ io.on("connection", (socket) => {
     socket.join(joinCode);
     socket.roomID = joinCode;
     socket.userId = userId;
-    room.users[userId] = {nickname: nickname, tabs: [], color: colors[Math.floor(Math.random() * colors.length)]};
+
+    room.users[userId] = {
+      nickname: nickname, 
+      tabs: [], 
+      color: colors[Math.floor(Math.random() * colors.length)]
+    };
     console.log(roomState);
 
     console.log(`User ${userId} joined room ${joinCode}`);
@@ -132,7 +143,7 @@ io.on("connection", (socket) => {
         delete roomState[roomID];
         console.log(`Room ${roomID} cleared from memory.`);
       } else {
-        io.to(roomID).emit("room-update", roomState[roomID].users);
+        io.to(roomID).emit("user-disconnect", userId);
       }
     }
     console.log(`Socket ${socket.id} disconnected. Reason: ${reason}`);

@@ -40,7 +40,30 @@ async function connectSocket() {
 
       socket.on("room-update", (users) => {
         delete users[userId];
-        cachedRoomState = users;
+        if(!cachedRoomState) {
+          cachedRoomState = users;
+        }
+        else {
+          Object.keys(users).forEach((userId) => {
+            if(cachedRoomState[userId]) {
+              cachedRoomState[userId].tabs = users[userId].tabs;
+            } 
+            else {
+              cachedRoomState[userId] = users[userId];
+            }
+          });
+        }
+        chrome.runtime.sendMessage({
+          action: "room-update",
+        }).catch(() => {
+          console.log("No elements received room update");
+        });
+      });
+
+      socket.on("user-disconnect", (userId) => {
+        if(cachedRoomState[userId]) {
+          delete cachedRoomState[userId];
+        }
         chrome.runtime.sendMessage({
           action: "room-update",
         }).catch(() => {
@@ -159,14 +182,14 @@ async function getPersistentUserId() {
   return newId;
 }
 
-chrome.storage.local.get("activeSessionCode", data => {
-  cachedActiveSessionCode = data.activeSessionCode || null;
-  activeSession = data.activeSessionCode ? true : false;
-});
+// chrome.storage.local.get("activeSessionCode", data => {
+//   cachedActiveSessionCode = data.activeSessionCode || null;
+//   activeSession = data.activeSessionCode ? true : false;
+// });
 
-chrome.storage.local.get("sharedGroupId", data => {
-  cachedGroupId = data.sharedGroupId || null;
-});
+// chrome.storage.local.get("sharedGroupId", data => {
+//   cachedGroupId = data.sharedGroupId || null;
+// });
 
 chrome.storage.local.get("nickname", data => {
   nickname = data.nickname || "Anonymous User";
@@ -175,12 +198,6 @@ chrome.storage.local.get("nickname", data => {
 // runtime listener
 
 chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
-  // if (message.action === "getUserId") {
-  //   if (cachedUserId) {
-  //     sendResponse(cachedUserId);
-  //   }
-  //   return true; // keep message channel open for async sendResponse
-  // }
   if(message.action === "getSessionStatus") {
     sendResponse(activeSession);
   }
@@ -189,6 +206,15 @@ chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
   }
   else if(message.action === "getRoomState") {
     sendResponse(cachedRoomState);
+  }
+  else if(message.action === "setUsersGroupId") {
+    const userId = message.userId;
+    if(cachedRoomState && cachedRoomState[userId] && message.groupId) {
+      cachedRoomState[userId].groupId = message.groupId;
+    }
+  }
+  else if(message.action === "getUsersGroupId") {
+    sendResponse(cachedRoomState[message.userId].groupId);
   }
   else if(message.action === "setNickname") {
     nickname = message.nickname || "Anonymous User";
@@ -287,4 +313,9 @@ chrome.tabGroups.onRemoved.addListener( async (tabGroup) => {
       chrome.storage.local.remove("sharedGroupId");
     }
   }
+  Object.keys(cachedRoomState).forEach((userId) => {
+    if(cachedRoomState[userId].groupId === tabGroup.id) {
+      delete cachedRoomState[userId].groupId;
+    }
+  });
 });
