@@ -78,14 +78,14 @@ class NonselectableTable extends HTMLElement {
       for (const row of this._data) {
         const tr = document.createElement("tr");
         tr.setAttribute("tabindex", "0");
-        tr.dataset.id = row[0];
+        tr.dataset.id = row.id;
 
         tr.innerHTML = `
-          <td> <img src="${row[1]}" /> </td>
+          <td> <img src="${row.favIconUrl}" /> </td>
           <td>
             <div>
-              <div class="tab-title"> ${row[2]} </div>
-              <div class="tab-url"> <a href="${row[3]}" target="_blank" rel="noreferrer" >${row[3]}</a> </div>
+              <div class="tab-title"> ${row.title} </div>
+              <div class="tab-url"> <a href="${row.url}" target="_blank" rel="noreferrer" >${row.url}</a> </div>
             </div>
           </td>
         `;

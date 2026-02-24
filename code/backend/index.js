@@ -24,12 +24,12 @@ const io = new Server(3000, {
 //     "user-uuid-1": {
 //                      nickname: "john",
 //                      color: "blue",
-//                      tabs: ["https://google.com", ...],
+//                      tabs: [{id, favIconUrl, title, url}, ...],
 //                    }
 //     "user-uuid-2": {
 //                      nickname: "jane",
 //                      color: "red",
-//                      tabs: ["https://google.com", ...],
+//                      tabs: [{id, favIconUrl, title, url}, ...],
 //                    }
 //     }
 //   }

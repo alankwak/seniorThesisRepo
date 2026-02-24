@@ -114,15 +114,15 @@ class SelectableTable extends HTMLElement {
         const tr = document.createElement("tr");
         tr.setAttribute("tabindex", "0");
         tr.setAttribute("aria-selected", "false");
-        tr.dataset.id = row[0];
+        tr.dataset.id = row.id;
 
         tr.innerHTML = `
           <td class="checkbox-cell"><input type="checkbox"></td>
-          <td> <img src="${row[1]}" /> </td>
+          <td> <img src="${row.favIconUrl}" /> </td>
           <td>
             <div>
-              <div class="tab-title"> ${row[2]} </div>
-              <div class="tab-url"> ${row[3]} </div>
+              <div class="tab-title"> ${row.title} </div>
+              <div class="tab-url"> ${row.url} </div>
             </div>
           </td>
         `;

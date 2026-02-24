@@ -94,14 +94,14 @@ chrome.runtime.onMessage.addListener( (message) => {
 
 async function updateTabTable() {
   const currentTabs = await chrome.tabs.query({groupId: chrome.tabGroups.TAB_GROUP_ID_NONE});
-  tabTable.data = currentTabs.map((tab) => [tab.id, tab.favIconUrl || "", tab.title, tab.url]);
+  tabTable.data = currentTabs.map((tab) => ({id: tab.id, favIconUrl: tab.favIconUrl || "", title: tab.title, url: tab.url}));
 }
 
 async function updateLocalTable() {
   setTimeout(async () => {
     const groupId = await chrome.runtime.sendMessage({action: "getGroupId"});
     const tabsInGroup = groupId ? await chrome.tabs.query({groupId: groupId}) : [];
-    localTable.data = tabsInGroup.map((tab) => [tab.id, tab.favIconUrl || "", tab.title, tab.url]);
+    localTable.data = tabsInGroup.map((tab) => ({id: tab.id, favIconUrl: tab.favIconUrl || "", title: tab.title, url: tab.url}));
   }, 50)
 }
 
@@ -131,7 +131,7 @@ async function updateRoomState() {
         openAll.addEventListener("click", async () => {
             const groupId = await chrome.runtime.sendMessage({ action: "getUsersGroupId", userId: userId });
             const createdTabs = await Promise.all(
-              user.tabs.map(tab => chrome.tabs.create({ url: tab[3] }))
+              user.tabs.map(tab => chrome.tabs.create({ url: tab.url }))
             );
             const tabIds = createdTabs.map(tab => tab.id);
             chrome.tabs.group({tabIds: tabIds, groupId: groupId}, async (newGroupId) => {

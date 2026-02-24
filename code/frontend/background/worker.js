@@ -161,7 +161,7 @@ async function disconnectSocket() {
 async function sendTabsToServer() {
   if(socket) {
     const tabsInGroup = cachedGroupId ? await chrome.tabs.query({groupId: cachedGroupId}) : [];
-    const tabsInfo = tabsInGroup.map((tab) => [tab.id, tab.favIconUrl || "", tab.title, tab.url]);
+    const tabsInfo = tabsInGroup.map((tab) => ({id: tab.id, favIconUrl: tab.favIconUrl || "", title: tab.title, url: tab.url}));
     socket.emit("share-tabs", tabsInfo);
   }
 }
