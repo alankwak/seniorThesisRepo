@@ -128,18 +128,8 @@ async function updateRoomState() {
         openAll.classList.add("open-button");
         openAll.style.backgroundColor = user.color;
         openAll.textContent = "Open All";
-        openAll.addEventListener("click", async () => {
-            const groupId = await chrome.runtime.sendMessage({ action: "getUsersGroupId", userId: userId });
-            const createdTabs = await Promise.all(
-              user.tabs.map(tab => chrome.tabs.create({ url: tab.url }))
-            );
-            const tabIds = createdTabs.map(tab => tab.id);
-            chrome.tabs.group({tabIds: tabIds, groupId: groupId}, async (newGroupId) => {
-              if(!groupId) {
-                await chrome.tabGroups.update(newGroupId, {color: user.color, title: `CoTab - ${user.nickname}`});
-                await chrome.runtime.sendMessage({ action: "setUsersGroupId", userId: userId, groupId: newGroupId });
-              }
-            });
+        openAll.addEventListener("click", () => {
+          chrome.runtime.sendMessage({ action: "updateTabsForUser", userId: userId });
         });
 
         const followAlong = document.createElement('button');
