@@ -39,7 +39,7 @@ const roomState = {};
 // Helper to generate a random 6-digit code
 const generateJoinCode = () => Math.floor(100000 + Math.random() * 900000).toString();
 // Colors to randomly assign each user
-const colors = ["blue", "red", "green", "purple", "orange"];
+const colors = ["blue", "red", "purple", "orange"];
 
 io.on("connection", (socket) => {
   console.log(`Connection established: ${socket.id}`);

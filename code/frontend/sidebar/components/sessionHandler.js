@@ -92,6 +92,23 @@ class SessionHandler extends HTMLElement {
                 font-weight: bold;
                 margin: 10px auto;
             }
+            .status {
+                background-color: #f7ff8a;
+                color: #585700;
+                padding: 3px 10px;
+                width: 70%;
+                margin: 5px auto 0 auto;
+                border-radius: 5px;
+                display: ${this.statusMessage ? "flex" : "none"};
+                justify-content: space-between;
+                align-items: center;
+            }
+            .closeButton {
+                background: none;
+                border: none;
+                margin: 0;
+                padding: 0;
+            }
             .center {
                 display: flex;
                 justify-content: center;
@@ -108,7 +125,10 @@ class SessionHandler extends HTMLElement {
                     <button class="promptButton" id="promptCreate"> Create New Session </button>
                     <button class="promptButton" id="promptJoin"> Join Existing Session </button>
                   </div>
-                  <div class="status" id="status" ></div>
+                  <div class="status"> 
+                    <span id="status"></span>
+                    <button class="closeButton">✖</button>
+                  </div>
                 </div>
             `;
             this.shadowRoot.getElementById("promptCreate").addEventListener("click", () => {
@@ -134,7 +154,10 @@ class SessionHandler extends HTMLElement {
                     <button class="actionButton confirmButton" id="create"> Create </button>
                     <button class="actionButton cancelButton" id="cancel"> Cancel </button>
                   </div>
-                  <div class="status" id="status" ></div>
+                  <div class="status"> 
+                    <span id="status"></span>
+                    <button class="closeButton">✖</button>
+                  </div>
                 </div>
             `;
 
@@ -182,7 +205,10 @@ class SessionHandler extends HTMLElement {
                     <button class="actionButton confirmButton" id="join"> Join </button>
                     <button class="actionButton cancelButton" id="cancel"> Cancel </button>
                   </div>
-                  <div class="status" id="status" ></div>
+                  <div class="status"> 
+                    <span id="status"></span>
+                    <button class="closeButton">✖</button>
+                  </div>
                 </div>
             `;
 
@@ -214,7 +240,6 @@ class SessionHandler extends HTMLElement {
                         this.render();
                     } else {
                         chrome.runtime.sendMessage({ action: "leaveSession" });
-                        this.state = "default";
                         this.render();
                     }
                 } else {
@@ -235,7 +260,10 @@ class SessionHandler extends HTMLElement {
                   <div class="center">
                     <button class="actionButton cancelButton" style="max-width: 50%" id="leave"> Leave Session </button>
                   </div>
-                  <div class="status" id="status" ></div>
+                  <div class="status"> 
+                    <span id="status"></span>
+                    <button class="closeButton">✖</button>
+                  </div>
                 </div>
             `;
             this.shadowRoot.getElementById("leave").addEventListener("click", () => {
@@ -247,12 +275,20 @@ class SessionHandler extends HTMLElement {
         }
 
         this.updateStatusUI();
+        const closeButton = this.shadowRoot.querySelector(".closeButton");
+        if(closeButton) {
+            closeButton.addEventListener("click", () => {
+                this.statusMessage = "";
+                this.updateStatusUI();
+            });
+        }
     }
 
     updateStatusUI() {
         const status = this.shadowRoot.getElementById("status");
         if(status) {
             status.textContent = this.statusMessage;
+            status.parentElement.style.display = this.statusMessage ? "flex" : "none";
         }
     }
 }
