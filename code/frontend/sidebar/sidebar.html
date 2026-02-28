@@ -16,31 +16,33 @@
     <session-handler></session-handler>
   </section>
 
+  <h2 style="text-align: center;">Shared Tabs</h2>
   <section class="shared-tabs">
-    <h2>Shared Tabs</h2>
-
     <div class="user-section">
-      <div class="user-label">You ( 
-        <span id="nickname-display"></span>
-        <input id="nickname-input" hidden>
+      <div class="user-header">
+        <div class="user-label">You ( 
+          <span id="nickname-display"></span>
+          <input id="nickname-input" hidden>
 
-        <button class="fa fa-edit edit-nickname-button" id="edit-nickname"></button>
-        <button class="fa fa-save edit-nickname-button" id="save-nickname" style="display: none"></button>
-        ):</div>
-    </div>
+          <button class="fa fa-edit edit-nickname-button" id="edit-nickname"></button>
+          <button class="fa fa-save edit-nickname-button" id="save-nickname" style="display: none"></button>
+          ):
+        </div>
+      </div>
 
-    <div class="table-section">
-      <non-selectable-table id="localTabs"></non-selectable-table>
-      <selectable-table id="tabSelection"></selectable-table>
-    </div>
+      <div class="table-section">
+        <non-selectable-table id="localTabs"></non-selectable-table>
+        <selectable-table id="tabSelection"></selectable-table>
+      </div>
 
-    <div class="controls">
-      <button id="startGroup" class="primary"> Share More Tabs</button>
-    </div>
+      <div class="controls">
+        <button id="startGroup" class="primary"> Share More Tabs</button>
+      </div>
 
-    <div class="actions">
-      <button id="confirmGroup" class="confirm">Confirm</button>
-      <button id="cancelGroup" class="cancel">Cancel</button>
+      <div class="actions">
+        <button id="confirmGroup" class="confirmButton">Confirm</button>
+        <button id="cancelGroup" class="cancelButton">Cancel</button>
+      </div>
     </div>
   </section>
 

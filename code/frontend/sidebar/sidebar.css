@@ -10,8 +10,11 @@ body {
   width: 100%;
   max-width: 700px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 0 16px 20px 16px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 /* --- User section --- */
@@ -80,12 +83,30 @@ body {
 
 .controls .primary {
   padding: 8px 16px;
+  margin: 10px auto;
+  background-color: #1d4f2c;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
-/* --- Table wrapper --- */
-
-.table-section {
-  margin-bottom: 24px;
+.confirmButton {
+    background: green; 
+    color: #FFFFFF;
+    cursor: pointer;
+    border-radius: 8px;
+}
+.confirmButton:hover {
+    background: #296b27ff
+}
+.cancelButton {
+    background: #e6361bff; 
+    color: #FFFFFF;
+    cursor: pointer;
+    border-radius: 8px;
+}
+.cancelButton:hover {
+    background: rgb(155, 32, 13);
 }
 
 /* --- Action buttons (Confirm + Cancel) --- */

@@ -85,7 +85,7 @@ class SessionHandler extends HTMLElement {
                 color: #FFFFFF;
             }
             .cancelButton:hover {
-                background: #ce3119ff;
+                background: rgb(155, 32, 13);
             }
             .codeDisplay {
                 font-size: 28px;
