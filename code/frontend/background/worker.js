@@ -248,6 +248,13 @@ async function applyDiffToOpenTabs(diff, userId) {
     }
   }
 
+  diff.updates.forEach(tab => {
+    const localTabId = localRoomState[userId].serverToLocalTabIdMap[tab.id];
+    if(localTabId) {
+      chrome.tabs.update(localTabId, { url: tab.url });
+    }
+  });
+
   diff.removals.forEach(localTabId => {
     Object.keys(localRoomState[userId].serverToLocalTabIdMap).forEach(serverTabId => {
       if(localRoomState[userId].serverToLocalTabIdMap[serverTabId] === localTabId) {
