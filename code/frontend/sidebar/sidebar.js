@@ -107,11 +107,14 @@ async function updateLocalTable() {
 
 async function updateRoomState() {
   const roomState = await chrome.runtime.sendMessage({action: "getRoomState"});
+  const followedUsers = await chrome.runtime.sendMessage({ action: "getFollowedUsers" });
   const listContainer = document.getElementById("other-users");
   listContainer.replaceChildren();
   if(roomState) {
     Object.entries(roomState).forEach(([userId, user]) => {
       if(user.tabs.length > 0) {
+        const following = followedUsers.includes(userId);
+
         const userSection = document.createElement('div');
         userSection.classList.add("user-section");
 
@@ -127,22 +130,40 @@ async function updateRoomState() {
         const openAll = document.createElement('button');
         openAll.classList.add("open-button");
         openAll.style.backgroundColor = user.color;
+        openAll.style.display = following ? "none" : "inline-block";
         openAll.textContent = "Open All";
         openAll.addEventListener("click", () => {
           chrome.runtime.sendMessage({ action: "updateTabsForUser", userId: userId });
         });
 
         const followAlong = document.createElement('button');
+        const stopFollowing = document.createElement('button');
         followAlong.classList.add("open-button");
         followAlong.style.backgroundColor = user.color;
+        followAlong.style.display = following ? "none" : "inline-block";
         followAlong.textContent = "Follow Along";
         followAlong.addEventListener("click", () => {
-            console.log("Button clicked for:", user.nickname);
+          chrome.runtime.sendMessage({ action: "followUser", userId: userId });
+          openAll.style.display = "none";
+          followAlong.style.display = "none";
+          stopFollowing.style.display = "inline-block";
+        });
+
+        stopFollowing.classList.add("open-button");
+        stopFollowing.style.backgroundColor = user.color;
+        stopFollowing.textContent = "Stop Following";
+        stopFollowing.style.display = following ? "inline-block" :"none";
+        stopFollowing.addEventListener("click", () => {
+          chrome.runtime.sendMessage({ action: "stopFollowingUser", userId: userId });
+          openAll.style.display = "inline-block";
+          followAlong.style.display = "inline-block";
+          stopFollowing.style.display = "none";
         });
 
         userHeader.appendChild(userLabel);
         userHeader.appendChild(openAll);
         userHeader.appendChild(followAlong);
+        userHeader.appendChild(stopFollowing);
 
         const tableSection = document.createElement('div');
         tableSection.classList.add("table-section");

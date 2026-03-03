@@ -85,7 +85,7 @@ class NonselectableTable extends HTMLElement {
           <td>
             <div>
               <div class="tab-title"> ${row.title} </div>
-              <div class="tab-url"> <a href="${row.url}" target="_blank" rel="noreferrer" >${row.url}</a> </div>
+              <div class="tab-url"> <a href="${row.url}" target="_blank" rel="noreferrer" title="${row.url}">${row.url}</a> </div>
             </div>
           </td>
         `;

@@ -8,6 +8,7 @@ let nickname = "Anonymous User";
 
 let updatedRoomState = {};
 let localRoomState = {};
+const followedUsers = new Set();
 // roomState structure
 // { 
 // users: {
@@ -69,6 +70,12 @@ async function connectSocket() {
             else {
               updatedRoomState[userId] = users[userId];
             }
+
+            if(localRoomState[userId] && followedUsers.has(userId)) {
+              updateTabsForUser(userId);
+            } else {
+              followedUsers.delete(userId);
+            }
           });
         }
         chrome.runtime.sendMessage({
@@ -81,6 +88,9 @@ async function connectSocket() {
       socket.on("user-disconnect", (userId) => {
         delete updatedRoomState[userId];
         delete localRoomState[userId];
+        delete pendingUpdates[userId];
+        delete running[userId];
+
         chrome.runtime.sendMessage({
           action: "room-update",
         }).catch(() => {
@@ -204,11 +214,14 @@ function getDiff(oldState, newState, userId) {
   const additions = [];
   const removals = [];
   const updates = [];
-  const tabIdMap = oldState[userId].serverToLocalTabIdMap;
-
   if(!oldState[userId] || !oldState[userId].tabs) {
     return { additions: newState[userId].tabs, removals, updates };
   }
+
+  const tabIdMap = oldState[userId].serverToLocalTabIdMap;
+
+  // console.log("LOCAL STATE:", oldState[userId]);
+  // console.log("NEW STATE:", newState[userId]);
 
   newState[userId].tabs.forEach((tab) => {
     const existing = oldState[userId].tabs.find(oldTab => oldTab.id === tabIdMap[tab.id]);
@@ -231,7 +244,9 @@ function getDiff(oldState, newState, userId) {
   return { additions, removals, updates };
 }
 
-async function applyDiffToOpenTabs(diff, userId) {  
+async function applyDiffToOpenTabs(userId) {  
+  const diff = getDiff(localRoomState, updatedRoomState, userId);
+
   const createdTabs = await Promise.all(
     diff.additions.map(tab => chrome.tabs.create({ url: tab.url, active: false }))
   );
@@ -248,31 +263,75 @@ async function applyDiffToOpenTabs(diff, userId) {
     }
   }
 
-  diff.updates.forEach(tab => {
-    const localTabId = localRoomState[userId].serverToLocalTabIdMap[tab.id];
-    if(localTabId) {
-      chrome.tabs.update(localTabId, { url: tab.url });
-    }
-  });
-
-  diff.removals.forEach(localTabId => {
-    Object.keys(localRoomState[userId].serverToLocalTabIdMap).forEach(serverTabId => {
-      if(localRoomState[userId].serverToLocalTabIdMap[serverTabId] === localTabId) {
-        delete localRoomState[userId].serverToLocalTabIdMap[serverTabId];
-      }
-    });
-  });
   // console.log("TAB ID MAP:", localRoomState[userId].serverToLocalTabIdMap);
   await chrome.tabs.remove(diff.removals);
+
+  if(localRoomState[userId]) {
+    diff.removals.forEach(localTabId => {
+      Object.keys(localRoomState[userId].serverToLocalTabIdMap).forEach(serverTabId => {
+        if(localRoomState[userId].serverToLocalTabIdMap[serverTabId] === localTabId) {
+          delete localRoomState[userId].serverToLocalTabIdMap[serverTabId];
+        }
+      });
+    });
+    diff.updates.forEach(tab => {
+      const localTabId = localRoomState[userId].serverToLocalTabIdMap[tab.id];
+      if(localTabId) {
+        chrome.tabs.update(localTabId, { url: tab.url });
+      }
+    });
+  }
 
   await updateLocalRoomState(userId);
 }
 
 async function updateLocalRoomState(userId) {
+  if(!localRoomState[userId]) {
+    return;
+  }
   const groupId = localRoomState[userId].groupId;
   const localTabs = groupId ? await chrome.tabs.query({ groupId }) : [];
   localRoomState[userId].tabs = localTabs.map(tab => ({id: tab.id, favIconUrl: tab.favIconUrl || "", title: tab.title, url: tab.url}));
 }
+
+// mutex, pain
+const pendingUpdates = {};
+const running = {};
+
+function updateTabsForUser(userId) {
+  if(!localRoomState[userId]) {
+    localRoomState[userId] = { tabs: [], groupId: null, serverToLocalTabIdMap: {} };
+  }
+
+  pendingUpdates[userId] = true;
+  processQueue(userId);
+}
+
+async function processQueue(userId) {
+  if (running[userId]) return;
+  running[userId] = true;
+
+  try {
+    while(pendingUpdates[userId]) {
+      pendingUpdates[userId] = false;
+
+      try {
+        await applyDiffToOpenTabs(userId);
+      } catch (error) {
+        if(error == "Error: Tabs cannot be edited right now (user may be dragging a tab).") {
+          pendingUpdates[userId] = true;
+          await new Promise(res => setTimeout(res, 200));
+        } else {
+          throw error;
+        }
+      }
+    }
+  } finally {
+    running[userId] = false;
+  }
+}
+
+
 
 // chrome.storage.local.get("activeSessionCode", data => {
 //   cachedActiveSessionCode = data.activeSessionCode || null;
@@ -301,13 +360,27 @@ chrome.runtime.onMessage.addListener( (message, sender, sendResponse) => {
   }
   else if(message.action === "updateTabsForUser") {
     const userId = message.userId;
-    if(!localRoomState[userId]) {
-      localRoomState[userId] = { tabs: [], groupId: null, serverToLocalTabIdMap: {} };
+    if(userId) {
+      updateTabsForUser(userId);
     }
-    (async () => {
-      const diff = getDiff(localRoomState, updatedRoomState, userId);
-      await applyDiffToOpenTabs(diff, userId);
-    })();
+  }
+  else if(message.action === "followUser") {
+    const userId = message.userId;
+    if(userId) {
+      (async () => {
+        await updateTabsForUser(userId);
+        followedUsers.add(userId);
+      })();
+    }
+  }
+  else if(message.action === "stopFollowingUser") {
+    const userId = message.userId;
+    if(userId) {
+      followedUsers.delete(userId);
+    }
+  }
+  else if(message.action === "getFollowedUsers") {
+    sendResponse(Array.from(followedUsers));
   }
   else if(message.action === "setNickname") {
     nickname = message.nickname || "Anonymous User";
