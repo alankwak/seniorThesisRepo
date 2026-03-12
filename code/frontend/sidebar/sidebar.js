@@ -3,8 +3,12 @@ const confirmGroupButton = document.getElementById("confirmGroup");
 const cancelGroupButton = document.getElementById("cancelGroup");
 const tabTable = document.getElementById("tabSelection");
 const localTable = document.getElementById("localTabs");
+const localMinButton = document.querySelector(".min-button");
 const updateNicknameButton = document.getElementById("edit-nickname");
 const saveNicknameButton = document.getElementById("save-nickname");
+
+let localTableMinimized = true;
+const minimizedUsers = new Set();
 
 startGroupButton.addEventListener("click", async () => {
   updateTabTable();
@@ -62,6 +66,17 @@ saveNicknameButton.addEventListener("click", async () => {
   nicknameInput.style.display = "none";
   updateNicknameButton.style.display = "inline-block";
   saveNicknameButton.style.display = "none";
+});
+
+localMinButton.addEventListener("click", () => {
+  if(localTableMinimized) {
+    localTable.minimized = false;
+    localMinButton.textContent = "-";
+  } else {
+    localTable.minimized = true;
+    localMinButton.textContent = "+";
+  }
+  localTableMinimized = !localTableMinimized;
 });
 
 chrome.tabs.onUpdated.addListener(() => {
@@ -169,7 +184,30 @@ async function updateRoomState() {
         tableSection.classList.add("table-section");
         const tabTable = document.createElement('non-selectable-table');
         tabTable.data = user.tabs;
+        tabTable.minimized = minimizedUsers.has(userId);
+
+        const minimizeDiv = document.createElement('div');
+        minimizeDiv.style.display = "flex";
+        minimizeDiv.style.justifyContent = "flex-end";
+        const minimizeButton = document.createElement('button');
+        minimizeButton.classList.add("min-button");
+        minimizeButton.textContent = "-";
+        minimizeButton.style.color = user.color;
+        minimizeButton.addEventListener("click", () => {
+          if(minimizedUsers.has(userId)) {
+            minimizedUsers.delete(userId);
+            tabTable.minimized = false;
+            minimizeButton.textContent = "-";
+          } else {
+            minimizedUsers.add(userId);
+            tabTable.minimized = true;
+            minimizeButton.textContent = "+";
+          }
+        });
+
+        minimizeDiv.appendChild(minimizeButton);
         tableSection.appendChild(tabTable);
+        tableSection.appendChild(minimizeDiv);
 
         userSection.appendChild(userHeader);
         userSection.appendChild(tableSection);

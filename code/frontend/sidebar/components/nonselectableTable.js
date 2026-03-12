@@ -6,6 +6,7 @@ class NonselectableTable extends HTMLElement {
 
   connectedCallback() {
     this.data = this.data || [];
+    this.minimized = this.data.length === 0;
     if (this.isConnected) this.render();
   }
 
@@ -18,6 +19,15 @@ class NonselectableTable extends HTMLElement {
     return this._data;
   }
 
+  set minimized(value) {
+    this._minimized = Boolean(value);
+    this.render();
+  }
+
+  get minimized() {
+    return this._minimized;
+  }
+
   render() {
     this.shadowRoot.innerHTML = `
       <style>
@@ -26,23 +36,21 @@ class NonselectableTable extends HTMLElement {
           font-family: system-ui, sans-serif;
         }
         .table-wrap {
-          border: 1px solid #ddd;
+          border: 1px solid #a7a7a7;
+          border-radius: 0 10px 10px 10px;
           max-height: 30em;
           overflow-x: hidden;
           overflow-y: auto;
-          border-radius: 0px 0px 10px 10px;
+          background: rgb(255, 255, 255);
         }
         table {
           width: 100%;
           border-collapse: collapse;
           table-layout: fixed;
         }
-        tbody {
-          background: #F9F9F9;
-        }
         tbody td {
           padding: 8px 12px;
-          border-bottom: 1px solid #eee;
+          border-bottom: 1px solid #c0c0c0;
           font-size: 14px;
         }
         img {
@@ -61,7 +69,7 @@ class NonselectableTable extends HTMLElement {
 
       <div class="table-wrap">
         <table>
-            <colgroup>
+          <colgroup>
             <col style="width: 10%">
             <col style="width: 90%">
           </colgroup>
@@ -75,22 +83,30 @@ class NonselectableTable extends HTMLElement {
     if(tbody) {
       tbody.innerHTML = "";
 
-      for (const row of this._data) {
+      if(this.minimized) {
         const tr = document.createElement("tr");
-        tr.setAttribute("tabindex", "0");
-        tr.dataset.id = row.id;
-
         tr.innerHTML = `
-          <td> <img src="${row.favIconUrl}" /> </td>
-          <td>
-            <div>
-              <div class="tab-title"> ${row.title} </div>
-              <div class="tab-url"> <a href="${row.url}" target="_blank" rel="noreferrer" title="${row.url}">${row.url}</a> </div>
-            </div>
-          </td>
+          <td colspan="2" style="text-align: center; font-style: italic; color: #666;">${this.data.length} tab${this.data.length !== 1 ? "s" : ""}</td>
         `;
-
         tbody.appendChild(tr);
+      } else {
+        for(const row of this._data) {
+          const tr = document.createElement("tr");
+          tr.setAttribute("tabindex", "0");
+          tr.dataset.id = row.id;
+
+          tr.innerHTML = `
+            <td> <img src="${row.favIconUrl}" /> </td>
+            <td>
+              <div>
+                <div class="tab-title"> ${row.title} </div>
+                <div class="tab-url"> <a href="${row.url}" target="_blank" rel="noreferrer" title="${row.url}">${row.url}</a> </div>
+              </div>
+            </td>
+          `;
+
+          tbody.appendChild(tr);
+        }
       }
     }
   }
