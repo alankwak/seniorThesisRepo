@@ -47,6 +47,8 @@ class SessionHandler extends HTMLElement {
                 display: flex;
                 flex-direction: column;
                 width: 100%;
+                max-width: 700px;
+                margin: 0 auto;
             }
             .promptButton {
                 margin: 8px;
