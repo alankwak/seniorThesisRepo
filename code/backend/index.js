@@ -35,6 +35,7 @@ const io = new Server(3000, {
 //   }
 // };
 const roomState = {};
+const userSockets = {};
 
 // Helper to generate a random 6-digit code
 const generateJoinCode = () => Math.floor(100000 + Math.random() * 900000).toString();
@@ -132,6 +133,8 @@ io.on("connection", (socket) => {
   // --- 4. HEARTBEAT / CLEANUP ---
   socket.on("disconnect", (reason) => {
     const { roomID, userId } = socket;
+    
+    delete userSockets[userId];
 
     if(roomID && roomState[roomID]) {
       // Remove user from the state
