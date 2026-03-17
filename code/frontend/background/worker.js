@@ -129,7 +129,7 @@ async function createRoom(password) {
       reject(new Error("Server timed out creating room."));
     }, 10000);
 
-    socket.emit("create-room", { password: password || null, userId: userId, nickname: nickname }, (response) => {
+    socket.emit("create-room", { password: password || null, userId: userId, nickname: nickname, defaultRole: "VIEW_ONLY" }, (response) => {
       clearTimeout(timeout);
 
       if(response && response.success) {
