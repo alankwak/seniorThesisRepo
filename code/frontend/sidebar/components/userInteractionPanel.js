@@ -23,20 +23,17 @@ class UserInteractionPanel extends HTMLElement {
       <style>
         .panel {
           max-width: 700px;
-          margin: 0 auto;
-          height: 18vh;
-          border: 1px solid #a7a7a7;
-          border-radius: 10px;
-          background: #bbbbbb;
+          max-height: 250px;
           display: flex;
           flex-direction: column;
-          overflow: hidden;
+          overflow:;
         }
 
         .content {
           flex: 1;
-          margin: 8px 8px 0 8px;
+          margin: 0;
           padding: 10px;
+          max-height: 12vh;
           border-radius: 8px 8px 8px 0;
           border: 1px solid #a7a7a7;
           border-bottom: none;
@@ -45,7 +42,7 @@ class UserInteractionPanel extends HTMLElement {
 
         .tab {
           display: none;
-          height: 100%;
+          max-height: 11vh;
         }
 
         .tab.active {
@@ -99,7 +96,7 @@ class UserInteractionPanel extends HTMLElement {
           padding: 10px;
           list-style: none;
           overflow-y: auto;
-          max-height: 10vh;
+          max-height: 10%;
         }
 
         .user-list li {
@@ -111,7 +108,6 @@ class UserInteractionPanel extends HTMLElement {
 
         .tab-bar {
           display: flex;
-          margin: 0 8px 8px 8px;
           gap: 4px;
         }
 

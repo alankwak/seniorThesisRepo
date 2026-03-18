@@ -1,5 +1,5 @@
 html, body {
-  height: 97.5vh;
+  height: 96vh;
 }
 
 body {
@@ -132,7 +132,7 @@ body {
 }
 
 .min-button {
-  background: #f0f0f0;
+  background: none;
   border: none;
   cursor: pointer;
   font-size: 20px;
