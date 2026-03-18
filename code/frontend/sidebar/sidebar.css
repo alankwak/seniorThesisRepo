@@ -1,14 +1,22 @@
+html, body {
+  height: 97.5vh;
+}
+
 body {
   font-family: Arial, sans-serif;
   padding: 12px;
   margin: 0;
   background-color: #f9f9f9;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Component wrapper */
 .shared-tabs {
   width: 100%;
   max-width: 700px;
+  height: 64vh;
+  overflow-y: auto;
   margin: 0 auto;
   padding: 0 16px 20px 16px;
   box-sizing: border-box;
@@ -40,7 +48,8 @@ body {
     font-size: 11px;
     max-width: 25%;
     font-weight: 600;
-    border-radius: 9px;
+    border: 1px solid #111;
+    border-radius: 8px;
     padding: auto;
     background-color:rgb(214, 70, 202);
     color: white;
@@ -129,4 +138,8 @@ body {
   font-size: 20px;
   font-weight: bold;
   font-family: monospace;
+}
+
+#all-users {
+  margin-top: auto;
 }
