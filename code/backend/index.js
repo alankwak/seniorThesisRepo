@@ -55,12 +55,15 @@ function assignNewLeader(roomId) {
   if(!room) return;
 
   let newLeaderId = Object.keys(room.userSockets)[0];
+  
   Object.entries(room.userSockets).forEach(([userId, socket]) => {
     if(socket.role < room.userSockets[newLeaderId].role) {
       newLeaderId = userId;
     }
   });
+
   room.userSockets[newLeaderId].role = roles.LEADER;
+  io.to(room.userSockets[newLeaderId]).emit("role-update", "LEADER");
   console.log(`New leader assigned: ${newLeaderId} in room ${roomId}`);
 }
 
@@ -111,6 +114,7 @@ io.on("connection", (socket) => {
     console.log(roomState);
 
     console.log(`Room Created: ${joinCode} by ${userId}`);
+    socket.emit("role-update", 0);
     callback({ success: true, joinCode: joinCode });
   });
 
@@ -146,7 +150,8 @@ io.on("connection", (socket) => {
 
     // Sync everyone in the room
     io.to(joinCode).emit("room-update", room.users);
-    return callback({ success: true, joinCode: joinCode });
+    socket.emit("role-update", room.defaultRole);
+    callback({ success: true, joinCode: joinCode });
   });
 
   // --- 3. SHARE TAB / UPDATE URL ---
@@ -175,6 +180,35 @@ io.on("connection", (socket) => {
       io.to(roomID).emit("room-update", roomState[roomID].users);
     } else {
       console.warn(`Nickname update failed for ${userId} - no room or user found.`);
+    }
+  });
+
+  socket.on("assign-role", ({ targetUserId, newRole }) => {
+    const { roomID, userId, role } = socket;
+
+    if(!checkAuthorized(role, roles.LEADER, roles.ADMIN)) {
+      return;
+    }
+
+    const targetSocket = roomState[roomID]?.userSockets?.[targetUserId];
+
+    if(roomID && roomState[roomID] && targetSocket) {
+      targetSocket.role = roles[newRole];
+      console.log(`Role of ${targetUserId} updated to ${newRole} by ${userId}`);
+      io.to(targetSocket.id).emit("role-update", newRole);
+    }
+  });
+
+  socket.on("kick-user", (targetUserId) => {
+    const { roomID, userId, role } = socket;
+
+    if(!checkAuthorized(role, roles.LEADER, roles.ADMIN)) {
+      return;
+    }
+
+    const targetSocket = roomState[roomID]?.userSockets?.[targetUserId];
+    if(targetSocket && targetSocket.role !== roles.LEADER) {
+      targetSocket.disconnect();
     }
   });
 

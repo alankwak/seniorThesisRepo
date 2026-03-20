@@ -5,44 +5,40 @@ class UserInteractionPanel extends HTMLElement {
   }
 
   connectedCallback() {
-    this.data = this.data || [];
-    if(this.isConnected) this.render();
-  }
-
-  set data(rows) {
-    this._data = rows;
     this.render();
-  }
-
-  get data() {
-    return this._data;
   }
 
   render() {
     this.shadowRoot.innerHTML = `
       <style>
+        html, body {
+          height: 100%;
+          margin: 0;
+        }
+
         .panel {
-          max-width: 700px;
-          max-height: 250px;
+          height: 15vh;
+          min-height: 150px;
           display: flex;
           flex-direction: column;
-          overflow:;
         }
 
         .content {
           flex: 1;
+          display: flex;
+          flex-direction: column;
           margin: 0;
           padding: 10px;
-          max-height: 12vh;
           border-radius: 8px 8px 8px 0;
           border: 1px solid #a7a7a7;
           border-bottom: none;
           background: #444444;
+          overflow: hidden;
         }
 
         .tab {
           display: none;
-          max-height: 11vh;
+          flex: 1;
         }
 
         .tab.active {
@@ -56,6 +52,7 @@ class UserInteractionPanel extends HTMLElement {
           border: 1px solid #a7a7a7;
           border-radius: 8px;
           padding: 10px;
+          overflow-y: auto;
         }
 
         .chat-input {
@@ -90,20 +87,34 @@ class UserInteractionPanel extends HTMLElement {
         }
 
         .user-list {
+          flex: 1;
           background: #bbbbbb;
           border: 1px solid #a7a7a7;
           border-radius: 8px;
-          padding: 10px;
+          padding: 8px;
           list-style: none;
           overflow-y: auto;
-          max-height: 10%;
         }
 
         .user-list li {
+          display: flex;
+          align-items: center;
+          gap: 8px;  
           padding: 8px;
           border-radius: 8px;
           background: #f1f3f5;
-          margin-bottom: 6px;
+          margin-bottom: 4px;
+        }
+
+        .kickButton {
+          cursor: pointer;
+          font-size: 11px;
+          max-width: 25%;
+          font-weight: 600;
+          border: 1px solid #111;
+          border-radius: 8px;
+          background-color: red;
+          color: white;
         }
 
         .tab-bar {
@@ -142,12 +153,7 @@ class UserInteractionPanel extends HTMLElement {
           </div>
 
           <div id="userTab" class="tab">
-            <div class="user-list" id="userList">
-              <li>Hello</li>
-              <li>Hello</li>
-              <li>Hello</li>
-              <li>Hello</li>
-            </div>
+            <div class="user-list" id="userList"></div>
           </div>
         </div>
 
@@ -177,6 +183,35 @@ class UserInteractionPanel extends HTMLElement {
           }
         });
       }
+    });
+  }
+
+  async updateUsers() {
+    const userList = this.shadowRoot.getElementById("userList");
+    const role = await chrome.runtime.sendMessage({action: "getRole"});
+    console.log(role);
+    const roomState = await chrome.runtime.sendMessage({ action: "getRoomState" });
+    userList.replaceChildren();
+    Object.entries(roomState).forEach(([userId, user]) => {
+      const li = document.createElement("li");
+      li.style.border = `${user.color} solid 1px`
+
+      const nicknameDiv = document.createElement("div");
+      nicknameDiv.textContent = user.nickname;
+      nicknameDiv.style.color = user.color;
+      li.appendChild(nicknameDiv)
+
+      if(role === 0 || role === 1) { // leaders and admin
+        const kickBtn = document.createElement("button");
+        kickBtn.textContent = "KICK";
+        kickBtn.classList.add("kickButton");
+        kickBtn.addEventListener("click", () => {
+          chrome.runtime.sendMessage({ action: "kickUser", userId: userId });
+        });
+
+        li.appendChild(kickBtn)
+      }
+      userList.appendChild(li);
     });
   }
 }

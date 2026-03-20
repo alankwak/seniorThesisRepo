@@ -5,6 +5,7 @@ let activeSession = false;
 let cachedActiveSessionCode = null;
 let cachedGroupId = null;
 let nickname = "Anonymous User";
+let currentRole = null;
 
 let updatedRoomState = {};
 let localRoomState = {};
@@ -25,6 +26,14 @@ const followedUsers = new Set();
 //     }
 // }
 
+function resetState() {
+  cachedActiveSessionCode = null;
+  activeSession = false;
+  updatedRoomState = {};
+  localRoomState = {};
+  followedUsers.clear();
+  currentRole = null;
+}
 
 // sockets
 
@@ -45,14 +54,20 @@ async function connectSocket() {
 
       socket.on("disconnect", (reason) => {
         chrome.storage.local.remove(["activeSessionCode"]);
-        cachedActiveSessionCode = null;
-        activeSession = false;
-        updatedRoomState = {};
-        localRoomState = {};
+        resetState();
 
         if (reason === "transport close" || reason === "ping timeout") {
           showStatusUI("Error connecting to server.");
         }
+        else if (reason === "io server disconnect") {
+          showStatusUI("You were kicked from the room.");
+        }
+
+        chrome.runtime.sendMessage({
+          action: "room-update",
+        }).catch(() => {
+          console.log("No elements received room update");
+        });
       });
 
       socket.on("room-update", (users) => {
@@ -83,6 +98,15 @@ async function connectSocket() {
           action: "room-update",
         }).catch(() => {
           console.log("No elements received room update");
+        });
+      });
+
+      socket.on("role-update", (newRole) => {
+        currentRole = newRole;
+        chrome.runtime.sendMessage({
+          action: "role-update", role: newRole
+        }).catch(() => {
+          console.log("No elements received role update");
         });
       });
 
@@ -117,7 +141,7 @@ async function connectSocket() {
   });
 }
 
-async function createRoom(password) {
+async function createRoom(password, defaultRole) {
   const userId = await getPersistentUserId();
 
   return new Promise((resolve, reject) => {
@@ -129,7 +153,7 @@ async function createRoom(password) {
       reject(new Error("Server timed out creating room."));
     }, 10000);
 
-    socket.emit("create-room", { password: password || null, userId: userId, nickname: nickname, defaultRole: "VIEW_ONLY" }, (response) => {
+    socket.emit("create-room", { password: password || null, userId: userId, nickname: nickname, defaultRole: defaultRole }, (response) => {
       clearTimeout(timeout);
 
       if(response && response.success) {
@@ -175,10 +199,7 @@ async function disconnectSocket() {
     socket = null; 
   }
 
-  activeSession = false;
-  cachedActiveSessionCode = null;
-  updatedRoomState = {};
-  localRoomState = {};
+  resetState();
   await chrome.storage.local.remove(["activeSessionCode"]);
   chrome.runtime.sendMessage({
     action: "room-update",
@@ -422,6 +443,15 @@ chrome.runtime.onMessage.addListener( (message, _sender, sendResponse) => {
   else if(message.action === "getGroupId") {
     sendResponse(cachedGroupId);
   }
+  else if(message.action === "getRole") {
+    sendResponse(currentRole);
+  }
+  else if(message.action === "kickUser") {
+    const userId = message.userId;
+    if(socket && userId) {
+      socket.emit("kick-user", userId);
+    }
+  }
   else if(message.action === "createSession") {
 
     if(activeSession) {
@@ -430,7 +460,7 @@ chrome.runtime.onMessage.addListener( (message, _sender, sendResponse) => {
       (async () => {
         try {
           await connectSocket();
-          const response = await createRoom(message.password);
+          const response = await createRoom(message.password, message.defaultRole);
 
           activeSession = true;
           cachedActiveSessionCode = response.joinCode;
