@@ -36,6 +36,7 @@ class UserInteractionPanel extends HTMLElement {
           border-bottom: none;
           background: #444444;
           overflow: hidden;
+          min-height: 0;
         }
 
         .tab {
@@ -46,6 +47,7 @@ class UserInteractionPanel extends HTMLElement {
         .tab.active {
           display: flex;
           flex-direction: column;
+          min-height: 0;
         }
 
         .chat-box {
@@ -88,14 +90,19 @@ class UserInteractionPanel extends HTMLElement {
           background: #357abd;
         }
 
-        .user-list {
+        .user-list-wrapper {
           flex: 1;
           background: #bbbbbb;
           border: 1px solid #a7a7a7;
           border-radius: 8px;
           padding: 8px;
-          list-style: none;
           overflow-y: auto;
+        }
+
+        .user-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
         }
 
         .user-list li {
@@ -161,7 +168,7 @@ class UserInteractionPanel extends HTMLElement {
           </div>
 
           <div id="userTab" class="tab">
-            <div class="user-list" id="userList"></div>
+            <div class="user-list-wrapper"> <ul id="userList" class="user-list"></ul> </div>
           </div>
         </div>
 
@@ -199,6 +206,38 @@ class UserInteractionPanel extends HTMLElement {
     const personalRole = await chrome.runtime.sendMessage({ action: "getPersonalRole" });
     const roomState = await chrome.runtime.sendMessage({ action: "getRoomState" });
     userList.replaceChildren();
+    
+    const li = document.createElement("li");
+    li.style.border = `green solid 1px`;
+
+    const nicknameDiv = document.createElement("div");
+    nicknameDiv.textContent = "You";
+    nicknameDiv.style.color = "green";
+    nicknameDiv.style.width = "100%";
+    li.appendChild(nicknameDiv);
+
+    const roleLabel = document.createElement("div");
+    switch(personalRole) {
+      case 0:
+        roleLabel.textContent = "Leader";
+        break;
+      case 1:
+        roleLabel.textContent = "Admin";
+        break;
+      case 2:
+        roleLabel.textContent = "Collaborator";
+        break;
+      case 3:
+        roleLabel.textContent = "View Only";
+        break;
+    }
+    roleLabel.style.fontSize = "11px";
+    roleLabel.style.fontWeight = "600";
+    roleLabel.style.color = "#555";
+    li.appendChild(roleLabel);
+
+    userList.appendChild(li);
+
     Object.entries(roomState).forEach(([userId, user]) => {
       const li = document.createElement("li");
       li.style.border = `${user.color} solid 1px`
@@ -207,7 +246,7 @@ class UserInteractionPanel extends HTMLElement {
       nicknameDiv.textContent = user.nickname;
       nicknameDiv.style.color = user.color;
       nicknameDiv.style.width = "100%";
-      li.appendChild(nicknameDiv)
+      li.appendChild(nicknameDiv);
 
       if((personalRole === 0 || personalRole === 1) && personalRole < user.role) { // leaders and admin
         const kickBtn = document.createElement("button");

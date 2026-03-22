@@ -197,15 +197,19 @@ io.on("connection", (socket) => {
 
     const targetSocket = roomState[roomID]?.userSockets?.[targetUserId];
 
-    if(socket.role === 0 && newRole === 0) {
-      socket.role = 1;
-      roomState[roomID].users[userId].role = 1;
-
-      socket.emit("personal-role-update", 1);
-    }
     if(targetSocket && socket.role < targetSocket.role) {
       targetSocket.role = newRole;
       roomState[roomID].users[targetUserId].role = newRole;
+      if(newRole === 3) {
+        roomState[roomID].users[targetUserId].tabs = [];
+      }
+
+      if(socket.role === 0 && newRole === 0) {
+        socket.role = 1;
+        roomState[roomID].users[userId].role = 1;
+
+        socket.emit("personal-role-update", 1);
+      }
 
       console.log(`Role of ${targetUserId} updated to ${newRole} by ${userId}`);
 
