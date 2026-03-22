@@ -19,6 +19,8 @@ class UserInteractionPanel extends HTMLElement {
         .panel {
           height: 15vh;
           min-height: 150px;
+          max-width: 700px;
+          margin: 0 auto;
           display: flex;
           flex-direction: column;
         }
@@ -139,6 +141,12 @@ class UserInteractionPanel extends HTMLElement {
           border-top: none;
           box-shadow: 0 2px 6px rgba(0,0,0,0.08);
         }
+
+        .roleDropdownOption {
+          font-size: 11px;
+          font-weight: 600;
+          color: #555;
+        }
       </style>
 
       <div class="panel">
@@ -188,8 +196,7 @@ class UserInteractionPanel extends HTMLElement {
 
   async updateUsers() {
     const userList = this.shadowRoot.getElementById("userList");
-    const role = await chrome.runtime.sendMessage({action: "getRole"});
-    console.log(role);
+    const personalRole = await chrome.runtime.sendMessage({ action: "getPersonalRole" });
     const roomState = await chrome.runtime.sendMessage({ action: "getRoomState" });
     userList.replaceChildren();
     Object.entries(roomState).forEach(([userId, user]) => {
@@ -199,9 +206,10 @@ class UserInteractionPanel extends HTMLElement {
       const nicknameDiv = document.createElement("div");
       nicknameDiv.textContent = user.nickname;
       nicknameDiv.style.color = user.color;
+      nicknameDiv.style.width = "100%";
       li.appendChild(nicknameDiv)
 
-      if(role === 0 || role === 1) { // leaders and admin
+      if((personalRole === 0 || personalRole === 1) && personalRole < user.role) { // leaders and admin
         const kickBtn = document.createElement("button");
         kickBtn.textContent = "KICK";
         kickBtn.classList.add("kickButton");
@@ -209,8 +217,74 @@ class UserInteractionPanel extends HTMLElement {
           chrome.runtime.sendMessage({ action: "kickUser", userId: userId });
         });
 
-        li.appendChild(kickBtn)
+        const roleDropdown = document.createElement("select");
+        roleDropdown.classList.add("roleDropdownOption");
+
+        if(personalRole === 0) {
+          const leaderOption = document.createElement("option");
+          leaderOption.classList.add("roleDropdownOption");
+          leaderOption.textContent = "Leader";
+          leaderOption.title = `Transfers leadership of the session to ${user.nickname}.`;
+          leaderOption.value = 0;
+          roleDropdown.appendChild(leaderOption);
+
+          const adminOption = document.createElement("option");
+          adminOption.classList.add("roleDropdownOption");
+          adminOption.textContent = "Admin";
+          adminOption.title = "Admin users can kick users and edit user roles.";
+          adminOption.selected = user.role === 1;
+          adminOption.value = 1;
+          roleDropdown.appendChild(adminOption);
+        }
+
+        const collaboratorOption = document.createElement("option");
+        collaboratorOption.classList.add("roleDropdownOption");
+        collaboratorOption.textContent = "Collaborator";
+        collaboratorOption.title = "Collaborators can share tabs.";
+        collaboratorOption.selected = user.role === 2;
+        collaboratorOption.value = 2;
+        roleDropdown.appendChild(collaboratorOption);
+
+        const viewOnlyOption = document.createElement("option");
+        viewOnlyOption.classList.add("roleDropdownOption");
+        viewOnlyOption.textContent = "View Only";
+        viewOnlyOption.title = "Users with view-only permissions can view and open shared tabs, but cannot share their own.";
+        viewOnlyOption.selected = user.role === 3;
+        viewOnlyOption.value = 3;
+        roleDropdown.appendChild(viewOnlyOption);
+
+        roleDropdown.onchange = () => {
+          const newRole = parseInt(roleDropdown.value, 10);
+          console.log(user.role, newRole);
+          if(newRole !== user.role) {
+            chrome.runtime.sendMessage({ action: "assignRole", userId: userId, role: newRole});
+          }
+        };
+
+        li.appendChild(roleDropdown);
+        li.appendChild(kickBtn);
+      } else {
+        const roleLabel = document.createElement("div");
+        switch(user.role) {
+          case 0:
+            roleLabel.textContent = "Leader";
+            break;
+          case 1:
+            roleLabel.textContent = "Admin";
+            break;
+          case 2:
+            roleLabel.textContent = "Collaborator";
+            break;
+          case 3:
+            roleLabel.textContent = "View Only";
+            break;
+        }
+        roleLabel.style.fontSize = "11px";
+        roleLabel.style.fontWeight = "600";
+        roleLabel.style.color = "#555";
+        li.appendChild(roleLabel);
       }
+
       userList.appendChild(li);
     });
   }

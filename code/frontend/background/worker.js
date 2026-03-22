@@ -16,11 +16,13 @@ const followedUsers = new Set();
 //     "user-uuid-1": {
 //           nickname: "john",
 //           color: "blue",
+//           role: 0,
 //           tabs: [{id, favIconUrl, title, url}, ...],
 //         }
 //     "user-uuid-2": {
 //           nickname: "jane",
 //           color: "red",
+//           role: 2,
 //           tabs: [{id, favIconUrl, title, url}, ...],
 //         }
 //     }
@@ -47,8 +49,7 @@ async function connectSocket() {
 
     if(!socket) {
       socket = io("http://localhost:3000", {
-        reconnection: true,
-        reconnectionDelay: 1000,
+        reconnection: false,
         transports: ["websocket"]
       });
 
@@ -77,13 +78,7 @@ async function connectSocket() {
         }
         else {
           Object.keys(users).forEach((userId) => {
-            if(updatedRoomState[userId]) {
-              updatedRoomState[userId].tabs = users[userId].tabs;
-              updatedRoomState[userId].nickname = users[userId].nickname;
-            } 
-            else {
-              updatedRoomState[userId] = users[userId];
-            }
+            updatedRoomState[userId] = users[userId];
 
             setTimeout(() => {
               if(followedUsers.has(userId) && localRoomState[userId]) {
@@ -101,12 +96,12 @@ async function connectSocket() {
         });
       });
 
-      socket.on("role-update", (newRole) => {
+      socket.on("personal-role-update", (newRole) => {
         currentRole = newRole;
         chrome.runtime.sendMessage({
-          action: "role-update", role: newRole
+          action: "personal-role-update", role: newRole
         }).catch(() => {
-          console.log("No elements received role update");
+          console.log("No elements received personal role update");
         });
       });
 
@@ -443,8 +438,11 @@ chrome.runtime.onMessage.addListener( (message, _sender, sendResponse) => {
   else if(message.action === "getGroupId") {
     sendResponse(cachedGroupId);
   }
-  else if(message.action === "getRole") {
+  else if(message.action === "getPersonalRole") {
     sendResponse(currentRole);
+  }
+  else if(message.action === "assignRole") {
+    socket.emit("assign-role", { targetUserId: message.userId, newRole: message.role });
   }
   else if(message.action === "kickUser") {
     const userId = message.userId;

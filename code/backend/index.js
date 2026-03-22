@@ -30,11 +30,13 @@ const io = new Server(3000, {
 //     "user-uuid-1": {
 //                      nickname: "john",
 //                      color: "blue",
+//                      role: 0,
 //                      tabs: [{id, favIconUrl, title, url}, ...],
 //                    },
 //     "user-uuid-2": {
 //                      nickname: "jane",
 //                      color: "red",
+//                      role: 2,
 //                      tabs: [{id, favIconUrl, title, url}, ...],
 //                    }
 //     }
@@ -63,7 +65,8 @@ function assignNewLeader(roomId) {
   });
 
   room.userSockets[newLeaderId].role = roles.LEADER;
-  io.to(room.userSockets[newLeaderId]).emit("role-update", "LEADER");
+  io.to(room.userSockets[newLeaderId]).emit("personal-role-update", 0);
+  io.to(roomId).emit("room-update", room.users);
   console.log(`New leader assigned: ${newLeaderId} in room ${roomId}`);
 }
 
@@ -105,7 +108,8 @@ io.on("connection", (socket) => {
 
     roomState[joinCode].users[userId] = {
       nickname: nickname, 
-      tabs: [], 
+      tabs: [],
+      role: socket.role,
       color: colors[Math.floor(Math.random() * colors.length)]
     };
     roomState[joinCode].userSockets = {
@@ -114,7 +118,7 @@ io.on("connection", (socket) => {
     console.log(roomState);
 
     console.log(`Room Created: ${joinCode} by ${userId}`);
-    socket.emit("role-update", 0);
+    socket.emit("personal-role-update", 0);
     callback({ success: true, joinCode: joinCode });
   });
 
@@ -140,7 +144,8 @@ io.on("connection", (socket) => {
 
     room.users[userId] = {
       nickname: nickname, 
-      tabs: [], 
+      tabs: [],
+      role: socket.role,
       color: colors[Math.floor(Math.random() * colors.length)]
     };
     room.userSockets[userId] = socket;
@@ -150,7 +155,7 @@ io.on("connection", (socket) => {
 
     // Sync everyone in the room
     io.to(joinCode).emit("room-update", room.users);
-    socket.emit("role-update", room.defaultRole);
+    socket.emit("personal-role-update", room.defaultRole);
     callback({ success: true, joinCode: joinCode });
   });
 
@@ -192,10 +197,20 @@ io.on("connection", (socket) => {
 
     const targetSocket = roomState[roomID]?.userSockets?.[targetUserId];
 
-    if(roomID && roomState[roomID] && targetSocket) {
-      targetSocket.role = roles[newRole];
+    if(socket.role === 0 && newRole === 0) {
+      socket.role = 1;
+      roomState[roomID].users[userId].role = 1;
+
+      socket.emit("personal-role-update", 1);
+    }
+    if(targetSocket && socket.role < targetSocket.role) {
+      targetSocket.role = newRole;
+      roomState[roomID].users[targetUserId].role = newRole;
+
       console.log(`Role of ${targetUserId} updated to ${newRole} by ${userId}`);
-      io.to(targetSocket.id).emit("role-update", newRole);
+
+      io.to(targetSocket.id).emit("personal-role-update", newRole);
+      io.to(roomID).emit("room-update", roomState[roomID].users);
     }
   });
 
@@ -207,7 +222,7 @@ io.on("connection", (socket) => {
     }
 
     const targetSocket = roomState[roomID]?.userSockets?.[targetUserId];
-    if(targetSocket && targetSocket.role !== roles.LEADER) {
+    if(targetSocket && socket.role < targetSocket.role) {
       targetSocket.disconnect();
     }
   });
