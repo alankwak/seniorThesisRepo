@@ -6,6 +6,7 @@ const localTable = document.getElementById("localTabs");
 const localMinButton = document.querySelector(".min-button");
 const updateNicknameButton = document.getElementById("edit-nickname");
 const saveNicknameButton = document.getElementById("save-nickname");
+const userInteractionPanel = document.getElementById("userInteract");
 
 let localTableMinimized = true;
 const minimizedUsers = new Set();
@@ -214,6 +215,8 @@ async function updateRoomState() {
         listContainer.appendChild(userSection);
       }
     });
+
+    userInteractionPanel.updateUsers()
   }
 }
 

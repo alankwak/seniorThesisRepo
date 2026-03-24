@@ -9,6 +9,7 @@
   <script src="components/selectableTable.js"></script>
   <script src="components/nonselectableTable.js"></script>
   <script src="components/sessionHandler.js"></script>
+  <script src="components/userInteractionPanel.js"></script>
 </head>
 <body>
 
@@ -18,38 +19,42 @@
 
   <h2 style="text-align: center;">Shared Tabs</h2>
   <section class="shared-tabs">
-    <div class="user-section">
-      <div class="user-header">
-        <div class="user-label">You ( 
-          <span id="nickname-display"></span>
-          <input id="nickname-input" hidden>
+      <div class="user-section">
+        <div class="user-header">
+          <div class="user-label">You ( 
+            <span id="nickname-display"></span>
+            <input id="nickname-input" hidden>
 
-          <button class="fa fa-edit edit-nickname-button" id="edit-nickname"></button>
-          <button class="fa fa-save edit-nickname-button" id="save-nickname" style="display: none"></button>
-          ):
+            <button class="fa fa-edit edit-nickname-button" id="edit-nickname"></button>
+            <button class="fa fa-save edit-nickname-button" id="save-nickname" style="display: none"></button>
+            ):
+          </div>
+        </div>
+
+        <div class="table-section">
+          <non-selectable-table id="localTabs"></non-selectable-table>
+          <div style="display: flex; justify-content: flex-end;">
+            <button class="min-button" style="color: #1d4f2c;">+</button>
+          </div>
+          <selectable-table id="tabSelection"></selectable-table>
+        </div>
+
+        <div class="controls">
+          <button id="startGroup" class="primary"> Share More Tabs</button>
+        </div>
+
+        <div class="actions">
+          <button id="confirmGroup" class="confirmButton">Confirm</button>
+          <button id="cancelGroup" class="cancelButton">Cancel</button>
         </div>
       </div>
 
-      <div class="table-section">
-        <non-selectable-table id="localTabs"></non-selectable-table>
-        <div style="display: flex; justify-content: flex-end;">
-          <button class="min-button" style="color: #1d4f2c;">+</button>
-        </div>
-        <selectable-table id="tabSelection"></selectable-table>
-      </div>
-
-      <div class="controls">
-        <button id="startGroup" class="primary"> Share More Tabs</button>
-      </div>
-
-      <div class="actions">
-        <button id="confirmGroup" class="confirmButton">Confirm</button>
-        <button id="cancelGroup" class="cancelButton">Cancel</button>
-      </div>
-    </div>
+    <div id="other-users"></div>
   </section>
 
-  <section class="shared-tabs" id="other-users"></section>
+  <section id="all-users">
+    <user-interaction-panel id="userInteract"></user-interaction-panel>
+  </section>
 
   <script src="sidebar.js"></script>
 </body>

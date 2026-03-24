@@ -149,8 +149,14 @@ class SessionHandler extends HTMLElement {
                 <div class="wrapper" id="wrapper">
                   <div class="header"> New session: </div>
                   <div class="wrapper" style="gap: 5px; margin: 10px auto 10px auto;">
-                    Password (optional):
+                    <label for="pwd" > Password (Optional): </label>
                     <input type="text" id="pwd" placeholder="Password" maxlength="40"> </input>
+                    <label for="default-role-select"> Default Role: </label>
+                    <select name="roles" id="default-role-select">
+                      <option value="ADMIN" title="Admin users can kick users and edit user roles."> Admin </option>
+                      <option value="COLLABORATOR" selected title="Collaborators can share tabs."> Collaborator </option>
+                      <option value="VIEW_ONLY" title="Users with view-only permissions can view and open shared tabs, but cannot share their own."> View-Only </option>
+                    </select>
                   </div>
                   <div class="center">
                     <button class="actionButton confirmButton" id="create"> Create </button>
@@ -172,7 +178,8 @@ class SessionHandler extends HTMLElement {
             createButton.addEventListener("click", async () => {
                 createButton.disabled = true;
                 const password = this.shadowRoot.getElementById("pwd").value;
-                const response = await chrome.runtime.sendMessage({ action: "createSession", password: password });
+                const defaultRole = this.shadowRoot.getElementById("default-role-select").value;
+                const response = await chrome.runtime.sendMessage({ action: "createSession", password: password, defaultRole: defaultRole });
                 if(response && response.success) {
                     this.sessionCode = response.code;
                     this.state = "connected";
