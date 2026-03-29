@@ -4,8 +4,11 @@ class UserInteractionPanel extends HTMLElement {
     this.attachShadow({ mode: "open" });
   }
 
-  connectedCallback() {
+  async connectedCallback() {
     this.render();
+    this.initResizer();
+    const chatHistory = await chrome.runtime.sendMessage({ action: "getChatHistory" });
+    chatHistory.forEach((message) => this.addMessage(message));
   }
 
   render() {
@@ -16,9 +19,22 @@ class UserInteractionPanel extends HTMLElement {
           margin: 0;
         }
 
+        .resizer {
+          width: 100%;
+          height: 8px;
+          cursor: ns-resize;
+          background: transparent;
+          position: absolute;
+          top: 0;
+          left: 0;
+          z-index: 10;
+        }
+
         .panel {
+          position: relative;
           height: 15vh;
           min-height: 150px;
+          max-height: 40vh;
           max-width: 700px;
           margin: 0 auto;
           display: flex;
@@ -51,12 +67,27 @@ class UserInteractionPanel extends HTMLElement {
         }
 
         .chat-box {
+          display: flex;
+          flex-direction: column;  
           flex: 1;
-          background: #bbbbbb;
+          min-height: 0;
+          background: #bbb;
           border: 1px solid #a7a7a7;
           border-radius: 8px;
-          padding: 10px;
+          padding: 0;
           overflow-y: auto;
+        }
+
+        .chat-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          margin-top: auto;
+        }
+
+        .chat-list li {
+          padding: 4px;
+          border-top: 2px solid gray;
         }
 
         .chat-input {
@@ -92,7 +123,7 @@ class UserInteractionPanel extends HTMLElement {
 
         .user-list-wrapper {
           flex: 1;
-          background: #bbbbbb;
+          background: #bbb;
           border: 1px solid #a7a7a7;
           border-radius: 8px;
           padding: 8px;
@@ -157,13 +188,14 @@ class UserInteractionPanel extends HTMLElement {
       </style>
 
       <div class="panel">
+        <div class="resizer" id="resizer"></div> 
         <div class="content">
           
           <div id="chatTab" class="tab active">
-            <div class="chat-box" id="chatBox"></div>
+            <div class="chat-box"> <ul class="chat-list" id="chatList"></ul> </div>
             <div class="chat-input">
               <input type="text" id="chatInput" placeholder="Type a message..." />
-              <button>Send</button>
+              <button id="sendChatButton">Send</button>
             </div>
           </div>
 
@@ -180,6 +212,19 @@ class UserInteractionPanel extends HTMLElement {
       `;
 
     const content = this.shadowRoot.querySelector(".content");
+    const chatInput = this.shadowRoot.getElementById("chatInput");
+
+    this.shadowRoot.getElementById("sendChatButton").addEventListener("click", (e) => {
+      chrome.runtime.sendMessage({ action: "sendChat", text: chatInput.value });
+      chatInput.value = "";
+    });
+
+    chatInput.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') {
+        chrome.runtime.sendMessage({ action: "sendChat", text: chatInput.value });
+        chatInput.value = "";
+      }
+    });
 
     this.shadowRoot.querySelector(".tab-bar").addEventListener("click", (e) => {
       if(e.target.tagName === "BUTTON") {
@@ -199,6 +244,45 @@ class UserInteractionPanel extends HTMLElement {
         });
       }
     });
+  }
+
+  initResizer() {
+    const resizer = this.shadowRoot.getElementById('resizer');
+    const panel = this.shadowRoot.querySelector('.panel');
+    
+    let startY, startHeight;
+
+    const onMouseDown = (e) => {
+      startY = e.clientY;
+      
+      startHeight = panel.getBoundingClientRect().height;
+      
+      document.body.style.cursor = 'ns-resize';
+      document.body.style.userSelect = 'none';
+
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+    };
+
+    const onMouseMove = (e) => {
+      const dy = startY - e.clientY;
+      
+      const newHeight = startHeight + dy;
+
+      // Apply constraints
+      if(newHeight > 150 && newHeight < window.innerHeight * 0.4) {
+        panel.style.height = `${newHeight}px`;
+      }
+    };
+
+    const onMouseUp = () => {
+      document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    resizer.addEventListener('mousedown', onMouseDown);
   }
 
   async updateUsers() {
@@ -228,7 +312,7 @@ class UserInteractionPanel extends HTMLElement {
         roleLabel.textContent = "Collaborator";
         break;
       case 3:
-        roleLabel.textContent = "View Only";
+        roleLabel.textContent = "View_Only";
         break;
     }
     roleLabel.style.fontSize = "11px";
@@ -315,7 +399,7 @@ class UserInteractionPanel extends HTMLElement {
             roleLabel.textContent = "Collaborator";
             break;
           case 3:
-            roleLabel.textContent = "View Only";
+            roleLabel.textContent = "View_Only";
             break;
         }
         roleLabel.style.fontSize = "11px";
@@ -326,6 +410,50 @@ class UserInteractionPanel extends HTMLElement {
 
       userList.appendChild(li);
     });
+  }
+
+  async addMessage(message) {
+    const personalUserId = await chrome.runtime.sendMessage({ action: "getUserId" });
+
+    const chatList = this.shadowRoot.getElementById("chatList");
+    const chatBox = chatList.parentElement;
+
+    const li = document.createElement("li");
+
+    const timestampSpan = document.createElement("span");
+    timestampSpan.textContent = `${message.timestamp} | `;
+    timestampSpan.style.fontWeight = 550;
+
+    const nicknameSpan = document.createElement("span");
+    nicknameSpan.textContent = `${message.system ? "SYSTEM" : message.fromUserNickname}${personalUserId === message.fromUser ? " (You)" : ""}: `;
+    nicknameSpan.style.fontWeight = 550;
+    if(message.system) {
+      nicknameSpan.style.color = "#444"
+      nicknameSpan.style.fontWeight = 800;
+    } else if(personalUserId === message.fromUser) {
+      nicknameSpan.style.color = "green";
+    } else {
+      nicknameSpan.style.color = message.color;
+    }
+    
+
+    const messageSpan = document.createElement("span");
+    messageSpan.textContent = message.text;
+
+    li.appendChild(timestampSpan);
+    li.appendChild(nicknameSpan);
+    li.append(messageSpan);
+    chatList.appendChild(li);
+
+    const isAtBottom = chatBox.scrollHeight - chatBox.scrollTop <= chatBox.clientHeight + 50;
+    if(isAtBottom || personalUserId === message.fromUser) {
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  }
+
+  clearChat() {
+    const chatList = this.shadowRoot.getElementById("chatList");
+    chatList.replaceChildren();
   }
 }
 

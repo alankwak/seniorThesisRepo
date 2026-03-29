@@ -80,6 +80,11 @@ localMinButton.addEventListener("click", () => {
   localTableMinimized = !localTableMinimized;
 });
 
+document.addEventListener("getChatHistory", async () => {
+  const chatHistory = await chrome.runtime.sendMessage({ action: "getChatHistory" });
+  chatHistory.forEach((message) => userInteractionPanel.addMessage(message));
+})
+
 chrome.tabs.onUpdated.addListener(() => {
   updateTabTable();
   updateLocalTable();
@@ -106,6 +111,12 @@ chrome.runtime.onMessage.addListener( (message) => {
   if(message.action === "room-update") {
     updateRoomState();
   }
+  else if(message.action === "new-chat-message") {
+    userInteractionPanel.addMessage(message.message);
+  }
+  // else if(message.action === "personal-role-update") {
+
+  // }
 });
 
 async function updateTabTable() {
@@ -216,7 +227,7 @@ async function updateRoomState() {
       }
     });
 
-    userInteractionPanel.updateUsers()
+    userInteractionPanel.updateUsers();
   }
 }
 

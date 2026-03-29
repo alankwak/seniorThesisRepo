@@ -79,7 +79,7 @@ const colors = ["blue", "red", "purple", "orange"];
 io.on("connection", (socket) => {
   console.log(`Connection established: ${socket.id}`);
 
-  // --- 1. CREATE ROOM ---
+  // CREATE/JOIN (initial connection)
   socket.on("create-room", ({ password, userId, nickname, defaultRole }, callback) => {
     if(!userId || !nickname) {
       return callback({ success: false, error: "User ID and nickname are required." });
@@ -118,11 +118,15 @@ io.on("connection", (socket) => {
     console.log(roomState);
 
     console.log(`Room Created: ${joinCode} by ${userId}`);
+
     socket.emit("personal-role-update", 0);
+    socket.emit("new-chat-message", { 
+      text: `Session created successfully. Invite others to join using the code: ${joinCode}.`, 
+      system: true
+    })
     callback({ success: true, joinCode: joinCode });
   });
 
-  // --- 2. JOIN ROOM ---
   socket.on("join-room", ({ joinCode, password, userId, nickname }, callback) => {
     const room = roomState[joinCode];
 
@@ -152,14 +156,14 @@ io.on("connection", (socket) => {
     console.log(roomState);
 
     console.log(`User ${userId} joined room ${joinCode} with role ${socket.role}`);
+    io.to(joinCode).emit("new-chat-message", { text: `${nickname} joined the session.`, system: true });
 
-    // Sync everyone in the room
     io.to(joinCode).emit("room-update", room.users);
     socket.emit("personal-role-update", room.defaultRole);
     callback({ success: true, joinCode: joinCode });
   });
 
-  // --- 3. SHARE TAB / UPDATE URL ---
+  // SHARE TABS
   socket.on("share-tabs", (tabsInfo) => {
     const { roomID, userId, role } = socket;
 
@@ -177,17 +181,21 @@ io.on("connection", (socket) => {
     }
   });
 
+  // NICKNAME
   socket.on("update-nickname", (nickname) => {
     const { roomID, userId } = socket;
     if(roomID && roomState[roomID] && roomState[roomID].users[userId]) {
+      const oldNickname = roomState[roomID].users[userId].nickname;
       roomState[roomID].users[userId].nickname = nickname;
       console.log(`nickname update by ${userId}: ${nickname}`);
       io.to(roomID).emit("room-update", roomState[roomID].users);
+      io.to(roomID).emit("new-chat-message", { text: `${oldNickname} changed name to ${nickname}.`, system: true });
     } else {
       console.warn(`Nickname update failed for ${userId} - no room or user found.`);
     }
   });
 
+  // ROLE-BASED ACTIONS
   socket.on("assign-role", ({ targetUserId, newRole }) => {
     const { roomID, userId, role } = socket;
 
@@ -231,12 +239,45 @@ io.on("connection", (socket) => {
     }
   });
 
-  // --- 4. HEARTBEAT / CLEANUP ---
+  // CHAT
+  socket.on("chat-message", (message) => {
+    const { roomID, userId, role } = socket;
+
+    const processedMessage = {
+      fromUser: userId,
+      fromUserNickname: roomState[roomID].users[userId].nickname,
+      text: message.text,
+      color: roomState[roomID].users[userId].color,
+      system: false,
+    }
+
+    console.log(`Server received message ${processedMessage.text} from ${userId}`);
+
+    if(message.toUser) {
+      processedMessage.toUser = message.toUser;
+      const targetSocket = room[roomID]?.userSockets?.[message.toUser];
+      if(targetSocket) {
+        targetSocket.emit("new-chat-message", processedMessage);
+        socket.emit("new-chat-message", processedMessage);
+      }
+    } else {
+      io.to(roomID).emit("new-chat-message", processedMessage);
+    }
+  });
+
+  // DISCONNECT / CLEANUP
   socket.on("disconnect", (reason) => {
     const { roomID, userId, role } = socket;
-    console.log(roomID, userId, role);
 
     console.log(`Socket ${socket.id} disconnected. Reason: ${reason}`);
+
+    if(!roomID) return;
+
+    const nickname = roomState[roomID].users[userId].nickname;
+    io.to(roomID).emit("new-chat-message", {
+      text: `${nickname} left the session.`,
+      system: true
+    });
 
     if(roomID && roomState[roomID]) {
       // Remove user from the state

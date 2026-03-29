@@ -27,6 +27,14 @@ const followedUsers = new Set();
 //         }
 //     }
 // }
+const chatStorage = [];
+const maxMessages = 50;
+function addMessage(message) {
+  while(chatStorage.length >= maxMessages) {
+    chatStorage.shift();
+  }
+  chatStorage.push(message);
+}
 
 function resetState() {
   cachedActiveSessionCode = null;
@@ -35,6 +43,7 @@ function resetState() {
   localRoomState = {};
   followedUsers.clear();
   currentRole = null;
+  chatStorage.length = 0;
 }
 
 // sockets
@@ -99,9 +108,25 @@ async function connectSocket() {
       socket.on("personal-role-update", (newRole) => {
         currentRole = newRole;
         chrome.runtime.sendMessage({
-          action: "personal-role-update", role: newRole
+          action: "personal-role-update", 
+          role: newRole
         }).catch(() => {
           console.log("No elements received personal role update");
+        });
+      });
+
+      socket.on("new-chat-message", (message) => {
+        message.timestamp = new Date().toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+        addMessage(message);
+        chrome.runtime.sendMessage({ 
+          action: "new-chat-message", 
+          message: message 
+        }).catch(() => {
+          console.log("No elements received new message");
         });
       });
 
@@ -391,6 +416,14 @@ chrome.runtime.onMessage.addListener( (message, _sender, sendResponse) => {
   else if(message.action === "getSessionCode") {
     sendResponse(cachedActiveSessionCode);
   }
+  else if(message.action === "getUserId") {
+    let userId = null;
+    (async () => {
+      userId = await getPersistentUserId();
+      sendResponse(userId);
+    })();
+    return true;
+  }
   else if(message.action === "getRoomState") {
     sendResponse(updatedRoomState);
   }
@@ -450,6 +483,15 @@ chrome.runtime.onMessage.addListener( (message, _sender, sendResponse) => {
       socket.emit("kick-user", userId);
     }
   }
+  else if(message.action === "sendChat") {
+    const toSend = { text: message.text };
+    if(socket && toSend.text) {
+      socket.emit("chat-message", toSend);
+    }
+  }
+  else if(message.action === "getChatHistory") {
+    sendResponse(chatStorage);
+  }
   else if(message.action === "createSession") {
 
     if(activeSession) {
@@ -462,7 +504,6 @@ chrome.runtime.onMessage.addListener( (message, _sender, sendResponse) => {
 
           activeSession = true;
           cachedActiveSessionCode = response.joinCode;
-          showStatusUI("Room created.");
 
           sendResponse({ success: true, code: response.joinCode });
         } catch(err) {
@@ -486,7 +527,6 @@ chrome.runtime.onMessage.addListener( (message, _sender, sendResponse) => {
 
           activeSession = true;
           cachedActiveSessionCode = response.joinCode;
-          showStatusUI("Joined room.");
 
           sendResponse({ success: true, code: response.joinCode });
         }
