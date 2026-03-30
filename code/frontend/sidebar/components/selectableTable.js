@@ -25,6 +25,12 @@ class SelectableTable extends HTMLElement {
     this.render();
   }
 
+  close() {
+    this.clearSelection();
+    this.enabled = false;
+    this.render();
+  }
+
   render() {
     this.shadowRoot.innerHTML = this.enabled ? `
       <style>

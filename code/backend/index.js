@@ -65,7 +65,10 @@ function assignNewLeader(roomId) {
   });
 
   room.userSockets[newLeaderId].role = roles.LEADER;
-  io.to(room.userSockets[newLeaderId]).emit("personal-role-update", 0);
+  room.users[newLeaderId].role = roles.LEADER;
+
+  io.to(room.userSockets[newLeaderId].id).emit("personal-role-update", roles.LEADER);
+  io.to(roomId).emit("new-chat-message", { text: `${room.users[newLeaderId].nickname} is the new session leader.`, system: true });
   io.to(roomId).emit("room-update", room.users);
   console.log(`New leader assigned: ${newLeaderId} in room ${roomId}`);
 }
@@ -119,7 +122,7 @@ io.on("connection", (socket) => {
 
     console.log(`Room Created: ${joinCode} by ${userId}`);
 
-    socket.emit("personal-role-update", 0);
+    socket.emit("personal-role-update", roles.LEADER);
     socket.emit("new-chat-message", { 
       text: `Session created successfully. Invite others to join using the code: ${joinCode}.`, 
       system: true
@@ -222,6 +225,11 @@ io.on("connection", (socket) => {
       console.log(`Role of ${targetUserId} updated to ${newRole} by ${userId}`);
 
       io.to(targetSocket.id).emit("personal-role-update", newRole);
+
+      const newRoleName = Object.keys(roles).find(key => roles[key] === newRole);
+      io.to(targetSocket.id).emit("new-chat-message", { text: `Your role has been changed to ${newRoleName}.`, system: true });
+      io.to(socket.id).emit("new-chat-message", { text: `You changed ${roomState[roomID].users[targetUserId].nickname}'s role to ${newRoleName}.`, system: true });
+
       io.to(roomID).emit("room-update", roomState[roomID].users);
     }
   });

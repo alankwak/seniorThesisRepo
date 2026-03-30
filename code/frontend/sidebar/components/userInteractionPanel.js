@@ -9,6 +9,8 @@ class UserInteractionPanel extends HTMLElement {
     this.initResizer();
     const chatHistory = await chrome.runtime.sendMessage({ action: "getChatHistory" });
     chatHistory.forEach((message) => this.addMessage(message));
+    const chatBox = this.shadowRoot.getElementById("chatBox");
+    if(chatBox) chatBox.scrollTop = chatBox.scrollHeight;
   }
 
   render() {
@@ -32,7 +34,7 @@ class UserInteractionPanel extends HTMLElement {
 
         .panel {
           position: relative;
-          height: 15vh;
+          height: 20vh;
           min-height: 150px;
           max-height: 40vh;
           max-width: 700px;
@@ -288,6 +290,7 @@ class UserInteractionPanel extends HTMLElement {
   async updateUsers() {
     const userList = this.shadowRoot.getElementById("userList");
     const personalRole = await chrome.runtime.sendMessage({ action: "getPersonalRole" });
+    console.log(personalRole);
     const roomState = await chrome.runtime.sendMessage({ action: "getRoomState" });
     userList.replaceChildren();
     

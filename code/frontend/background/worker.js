@@ -43,6 +43,12 @@ function resetState() {
   localRoomState = {};
   followedUsers.clear();
   currentRole = null;
+  chrome.runtime.sendMessage({
+    action: "personal-role-update", 
+    role: null
+  }).catch(() => {
+    console.log("No elements received personal role update");
+  });
   chatStorage.length = 0;
 }
 
@@ -106,7 +112,10 @@ async function connectSocket() {
       });
 
       socket.on("personal-role-update", (newRole) => {
+        console.log("received role update request");
+        console.log(newRole);
         currentRole = newRole;
+        console.log(currentRole);
         chrome.runtime.sendMessage({
           action: "personal-role-update", 
           role: newRole

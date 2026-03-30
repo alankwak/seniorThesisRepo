@@ -25,7 +25,7 @@ confirmGroupButton.addEventListener("click", async () => {
 
   let tabIds = tabTable.getSelectedIds().map(id => parseInt(id));
   const groupId = await chrome.runtime.sendMessage({action: "getGroupId"});
-  tabTable.toggle();
+  tabTable.close();
 
   if(tabIds.length == 0) {
     const newTab = await chrome.tabs.create({ url: "https://www.google.com" });
@@ -41,7 +41,7 @@ confirmGroupButton.addEventListener("click", async () => {
 cancelGroupButton.addEventListener("click", () => {
   confirmGroupButton.style.display = "none";
   cancelGroupButton.style.display = "none";
-  tabTable.toggle();
+  tabTable.close();
   startGroupButton.style.display = "block";
 });
 
@@ -55,9 +55,9 @@ updateNicknameButton.addEventListener("click", async () => {
   saveNicknameButton.style.display = "inline-block";
 });
 
-saveNicknameButton.addEventListener("click", async () => {
+const nicknameInput = document.getElementById("nickname-input");
+const saveNickname = async () => {
   const nicknameSpan = document.getElementById("nickname-display");
-  const nicknameInput = document.getElementById("nickname-input");
   const newNickname = nicknameInput.value.trim();
   if(newNickname.length > 0) {
     nicknameSpan.textContent = newNickname;
@@ -67,10 +67,15 @@ saveNicknameButton.addEventListener("click", async () => {
   nicknameInput.style.display = "none";
   updateNicknameButton.style.display = "inline-block";
   saveNicknameButton.style.display = "none";
-});
+}
+saveNicknameButton.addEventListener("click", saveNickname);
+nicknameInput.addEventListener("keyup", (e) => {
+  if(e.key === "Enter") saveNickname();
+})
 
 localMinButton.addEventListener("click", () => {
   if(localTableMinimized) {
+    if(localTable.data.length === 0) return;
     localTable.minimized = false;
     localMinButton.textContent = "-";
   } else {
@@ -79,11 +84,6 @@ localMinButton.addEventListener("click", () => {
   }
   localTableMinimized = !localTableMinimized;
 });
-
-document.addEventListener("getChatHistory", async () => {
-  const chatHistory = await chrome.runtime.sendMessage({ action: "getChatHistory" });
-  chatHistory.forEach((message) => userInteractionPanel.addMessage(message));
-})
 
 chrome.tabs.onUpdated.addListener(() => {
   updateTabTable();
@@ -106,6 +106,7 @@ chrome.tabGroups.onCreated.addListener(() => {
 document.addEventListener("DOMContentLoaded", updateLocalTable);
 document.addEventListener("DOMContentLoaded", updateRoomState);
 document.addEventListener("DOMContentLoaded", updateNickname);
+document.addEventListener("DOMContentLoaded", updateRole);
 
 chrome.runtime.onMessage.addListener( (message) => {
   if(message.action === "room-update") {
@@ -114,9 +115,9 @@ chrome.runtime.onMessage.addListener( (message) => {
   else if(message.action === "new-chat-message") {
     userInteractionPanel.addMessage(message.message);
   }
-  // else if(message.action === "personal-role-update") {
-
-  // }
+  else if(message.action === "personal-role-update") {
+    updateRole();
+  }
 });
 
 async function updateTabTable() {
@@ -235,4 +236,29 @@ async function updateNickname() {
   const nickname = await chrome.runtime.sendMessage({ action: "getNickname" });
   const nicknameSpan = document.getElementById("nickname-display");
   if(nicknameSpan) nicknameSpan.textContent = nickname;
+}
+
+async function updateRole() {
+  const role = await chrome.runtime.sendMessage({ action: "getPersonalRole" });
+  if(role === null || role > 2) {
+    startGroupButton.style.display = "none";
+    confirmGroupButton.style.display = "none";
+    cancelGroupButton.style.display = "none";
+    tabTable.close();
+    (async () => {
+      const localGroupId = await chrome.runtime.sendMessage({ action: "getGroupId" });
+      const tabs = localGroupId ? await chrome.tabs.query({groupId: localGroupId}) : [];
+      tabs.forEach(tab => {chrome.tabs.ungroup(tab.id)});
+      chrome.runtime.sendMessage({ action: "updateGroupId", message: null });
+    })();
+  } else {
+    startGroupButton.style.display = "block";
+  }
+
+  if(role === null) {
+    userInteractionPanel.style.display = "none";
+    userInteractionPanel.clearChat();
+  } else {
+    userInteractionPanel.style.display = "block";
+  }
 }
