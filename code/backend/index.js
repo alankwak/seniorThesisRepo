@@ -1,15 +1,4 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const { v4: uuidv4 } = require('uuid');
-const cors = require('cors');
-const path = require('path');
-const morgan = require('morgan');
 const { Server } = require('socket.io');
-
-const app = express();
-app.use(bodyParser.json());
-app.use(morgan('dev'));
-app.use(cors());
 
 const io = new Server(3000, {
   cors: { origin: "*" }
