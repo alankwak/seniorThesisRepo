@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
-    "name": "Tab-Sharing Prototype",
-    "description": "Initial test for my senior thesis project, which allows users to share tabs with other users across devices.",
+    "name": "CoTab",
+    "description": "Easily share your tabs with other users across devices!",
     "version": "0.0.1",
     "action": {
         "default_popup": "popup/popup.html"
