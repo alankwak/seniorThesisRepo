@@ -207,7 +207,7 @@ async function updateRoomState() {
         const minimizeButton = document.createElement('button');
         minimizeButton.classList.add("min-button");
         minimizeButton.textContent = "-";
-        minimizeButton.style.color = user.color;
+        minimizeButton.style.color = colors[user.color];
         minimizeButton.addEventListener("click", () => {
           if(minimizedUsers.has(userId)) {
             minimizedUsers.delete(userId);
