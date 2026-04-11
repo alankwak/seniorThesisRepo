@@ -1,3 +1,5 @@
+import {colors} from "../helpers/colors.js"
+
 class UserInteractionPanel extends HTMLElement {
   constructor() {
     super();
@@ -327,11 +329,11 @@ class UserInteractionPanel extends HTMLElement {
 
     Object.entries(roomState).forEach(([userId, user]) => {
       const li = document.createElement("li");
-      li.style.border = `${user.color} solid 1px`
+      li.style.border = `${colors[user.color]} solid 1px`
 
       const nicknameDiv = document.createElement("div");
       nicknameDiv.textContent = user.nickname;
-      nicknameDiv.style.color = user.color;
+      nicknameDiv.style.color = colors[user.color];
       nicknameDiv.style.width = "100%";
       li.appendChild(nicknameDiv);
 
@@ -436,7 +438,7 @@ class UserInteractionPanel extends HTMLElement {
     } else if(personalUserId === message.fromUser) {
       nicknameSpan.style.color = "green";
     } else {
-      nicknameSpan.style.color = message.color;
+      nicknameSpan.style.color = colors[message.color];
     }
     
 

@@ -66,7 +66,7 @@ function assignNewLeader(roomId) {
 const generateJoinCode = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 // Colors to randomly assign each user
-const colors = ["blue", "red", "purple", "orange"];
+const colors = ["blue", "red", "purple", "orange", "cyan", "pink", "yellow"];
 
 io.on("connection", (socket) => {
   console.log(`Connection established: ${socket.id}`);

@@ -1,3 +1,5 @@
+import { colors } from "./helpers/colors.js"
+
 const startGroupButton = document.getElementById("startGroup");
 const confirmGroupButton = document.getElementById("confirmGroup");
 const cancelGroupButton = document.getElementById("cancelGroup");
@@ -151,13 +153,13 @@ async function updateRoomState() {
 
         const userLabel = document.createElement('div');
         userLabel.classList.add("user-label");
-        userLabel.style.borderBottomColor = user.color;
-        userLabel.style.color = user.color;
+        userLabel.style.borderBottomColor = colors[user.color];
+        userLabel.style.color = colors[user.color];
         userLabel.textContent = user.nickname;
 
         const openAll = document.createElement('button');
         openAll.classList.add("open-button");
-        openAll.style.backgroundColor = user.color;
+        openAll.style.backgroundColor = colors[user.color];
         openAll.style.display = following ? "none" : "inline-block";
         openAll.textContent = "Open All";
         openAll.addEventListener("click", () => {
@@ -167,7 +169,7 @@ async function updateRoomState() {
         const followAlong = document.createElement('button');
         const stopFollowing = document.createElement('button');
         followAlong.classList.add("open-button");
-        followAlong.style.backgroundColor = user.color;
+        followAlong.style.backgroundColor = colors[user.color];
         followAlong.style.display = following ? "none" : "inline-block";
         followAlong.textContent = "Follow Along";
         followAlong.addEventListener("click", () => {
@@ -178,7 +180,7 @@ async function updateRoomState() {
         });
 
         stopFollowing.classList.add("open-button");
-        stopFollowing.style.backgroundColor = user.color;
+        stopFollowing.style.backgroundColor = colors[user.color];
         stopFollowing.textContent = "Stop Following";
         stopFollowing.style.display = following ? "inline-block" :"none";
         stopFollowing.addEventListener("click", () => {
