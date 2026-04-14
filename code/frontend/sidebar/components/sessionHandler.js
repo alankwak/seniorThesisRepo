@@ -92,6 +92,9 @@ class SessionHandler extends HTMLElement {
             .codeDisplay {
                 font-size: 28px;
                 font-weight: bold;
+                border: 4px solid;
+                border-radius: 5px;
+                padding: 8px;
                 margin: 10px auto;
             }
             .status {
@@ -262,12 +265,26 @@ class SessionHandler extends HTMLElement {
         } else if(this.state === "connected") {
             this.shadowRoot.innerHTML = `
                 ${styles}
+                <style>
+                  @media screen and (max-height: 750px) and (min-width: 360px) {
+                    .wrapper {
+                      flex-direction: row;
+                      justify-content: center;
+                      align-items: center;
+                      gap: 20px;
+                    }
+                    .center {
+                      margin: 0;
+                      max-width: 50%;
+                    }
+                  }
+                </style>
                 <div class="wrapper" id="wrapper">
                   <div class="codeDisplay center">
                     ${this.sessionCode || "_PH_CODE"}
                   </div>
                   <div class="center">
-                    <button class="actionButton cancelButton" style="max-width: 50%" id="leave"> Leave Session </button>
+                    <button class="actionButton cancelButton" style="max-width: 100%" id="leave"> Leave Session </button>
                   </div>
                   <div class="status"> 
                     <span id="status"></span>
