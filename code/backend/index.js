@@ -236,6 +236,24 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("update-session-password", (newPassword) => {
+    const { roomID, userId, role } = socket;
+    if(!checkAuthorized(role, roles.LEADER, roles.ADMIN)) {
+      return;
+    }
+    roomState[roomID].password = newPassword;
+    socket.emit("new-chat-message", { text: `Successfully ${newPassword === null ? "removed" : "set"} the session password.`, system: true });
+  });
+
+  socket.on("update-default-role", (newDefaultRole) => {
+    const { roomID, userId, role } = socket;
+    if(!checkAuthorized(role, roles.LEADER)) {
+      return;
+    }
+    roomState[roomID].defaultRole = newDefaultRole;
+    socket.emit("new-chat-message", { text: `Successfully updated the default role to ${Object.keys(roles).find(key => roles[key] === newDefaultRole)}.`, system: true });
+  });
+
   // CHAT
   socket.on("chat-message", (message) => {
     const { roomID, userId, role } = socket;

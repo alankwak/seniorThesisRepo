@@ -1,5 +1,7 @@
 import {io} from "socket.io-client"
+import { processCommand, commands } from "../sidebar/helpers/commands";
 
+// session-based state variables
 let socket;
 let activeSession = false;
 let cachedActiveSessionCode = null;
@@ -7,7 +9,9 @@ let cachedGroupId = null;
 let nickname = "Anonymous User";
 let currentRole = null;
 
+// room state from server
 let updatedRoomState = {};
+// room state corresponding to currently opened tabs, allows for calculating a "diff"
 let localRoomState = {};
 const followedUsers = new Set();
 // roomState structure
@@ -27,6 +31,8 @@ const followedUsers = new Set();
 //         }
 //     }
 // }
+
+// chat saving for when the sidebar is closed during a session
 const chatStorage = [];
 const maxMessages = 50;
 function addMessage(message) {
@@ -53,7 +59,6 @@ function resetState() {
 }
 
 // sockets
-
 async function connectSocket() {
   const userId = await getPersistentUserId();
 
@@ -113,9 +118,7 @@ async function connectSocket() {
 
       socket.on("personal-role-update", (newRole) => {
         console.log("received role update request");
-        console.log(newRole);
         currentRole = newRole;
-        console.log(currentRole);
         chrome.runtime.sendMessage({
           action: "personal-role-update", 
           role: newRole
@@ -246,7 +249,6 @@ async function sendTabsToServer() {
 }
 
 // state
-
 async function getPersistentUserId() {
   const data = await chrome.storage.local.get("userId");
   
@@ -270,9 +272,6 @@ function getDiff(oldState, newState, userId) {
   }
 
   const tabIdMap = oldState[userId].serverToLocalTabIdMap;
-
-  // console.log("LOCAL STATE:", oldState[userId]);
-  // console.log("NEW STATE:", newState[userId]);
 
   newState[userId].tabs.forEach((tab) => {
     const existing = oldState[userId].tabs.find(oldTab => oldTab.id === tabIdMap[tab.id]);
@@ -306,7 +305,7 @@ async function applyDiffToOpenTabs(userId) {
     localRoomState[userId].localToServerTabIdMap[createdTabs[i].id] = diff.additions[i].id;
   }
   const tabIds = createdTabs.map(tab => tab.id);
-  // console.log(diff);
+  
   if(tabIds.length > 0) {
     const newGroupId = await chrome.tabs.group({tabIds: tabIds, groupId: localRoomState[userId].groupId});
     if(!localRoomState[userId].groupId) {
@@ -315,7 +314,6 @@ async function applyDiffToOpenTabs(userId) {
     }
   }
 
-  // console.log("TAB ID MAP:", localRoomState[userId].serverToLocalTabIdMap);
   await chrome.tabs.remove(diff.removals);
 
   if(localRoomState[userId]) {
@@ -401,23 +399,11 @@ async function processQueue(userId) {
   }
 }
 
-
-
-// chrome.storage.local.get("activeSessionCode", data => {
-//   cachedActiveSessionCode = data.activeSessionCode || null;
-//   activeSession = data.activeSessionCode ? true : false;
-// });
-
-// chrome.storage.local.get("sharedGroupId", data => {
-//   cachedGroupId = data.sharedGroupId || null;
-// });
-
 chrome.storage.local.get("nickname", data => {
   nickname = data.nickname || "Anonymous User";
 });
 
 // runtime listener
-
 chrome.runtime.onMessage.addListener( (message, _sender, sendResponse) => {
   if(message.action === "getSessionStatus") {
     sendResponse(activeSession);
@@ -461,10 +447,12 @@ chrome.runtime.onMessage.addListener( (message, _sender, sendResponse) => {
     sendResponse(Array.from(followedUsers));
   }
   else if(message.action === "setNickname") {
-    nickname = message.nickname || "Anonymous User";
-    chrome.storage.local.set({ nickname: nickname });
-    if(socket){
-      socket.emit("update-nickname", nickname);
+    if(message.nickname && message.nickname !== nickname) {
+      nickname = message.nickname;
+      chrome.storage.local.set({ nickname: nickname });
+      if(socket){
+        socket.emit("update-nickname", nickname);
+      }
     }
   }
   else if(message.action === "getNickname") {
@@ -495,6 +483,9 @@ chrome.runtime.onMessage.addListener( (message, _sender, sendResponse) => {
   else if(message.action === "sendChat") {
     const toSend = { text: message.text };
     if(socket && toSend.text) {
+      if(processCommand(toSend.text, socket, chatStorage, commands)) {
+        return;
+      }
       socket.emit("chat-message", toSend);
     }
   }
@@ -502,7 +493,6 @@ chrome.runtime.onMessage.addListener( (message, _sender, sendResponse) => {
     sendResponse(chatStorage);
   }
   else if(message.action === "createSession") {
-
     if(activeSession) {
       sendResponse({ success: false, error: "Already in a session" });
     } else {
@@ -525,7 +515,6 @@ chrome.runtime.onMessage.addListener( (message, _sender, sendResponse) => {
     return true;
   }
   else if(message.action === "joinSession") {
-
     if(activeSession) {
       sendResponse({ success: false, error: "Already in a session" });
     } else {
@@ -553,6 +542,7 @@ chrome.runtime.onMessage.addListener( (message, _sender, sendResponse) => {
   }
 });
 
+// sends messages to SessionHandler component to display to user
 function showStatusUI(message) {
   chrome.runtime.sendMessage({
     action: "session_handler_status",
@@ -562,6 +552,7 @@ function showStatusUI(message) {
   });
 }
 
+// tab listeners
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   // keep local tab states for each followed user up to date so diff is accurate
   if(localRoomState && (changeInfo.url || changeInfo.groupId || changeInfo.title || changeInfo.favIconUrl)) {
@@ -569,7 +560,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       updateLocalRoomState(userId);
     });
   }
-  // if following a user, do not allow them to drag tabs into a that user's group
+  // if following a user, do not allow them to drag tabs into that user's group
   if(changeInfo.groupId && localRoomState) {
     Object.keys(localRoomState).forEach((userId) => {
       if(followedUsers.has(userId) && changeInfo.groupId === localRoomState[userId].groupId && !localRoomState[userId].localToServerTabIdMap[tabId]) {

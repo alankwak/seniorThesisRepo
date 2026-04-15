@@ -115,7 +115,8 @@ chrome.runtime.onMessage.addListener( (message) => {
     updateRoomState();
   }
   else if(message.action === "new-chat-message") {
-    userInteractionPanel.addMessage(message.message);
+    if(message.message) userInteractionPanel.addMessage(message.message);
+    else userInteractionPanel.clearChat();
   }
   else if(message.action === "personal-role-update") {
     updateRole();
