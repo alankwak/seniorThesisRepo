@@ -68,7 +68,7 @@ Now, CoTab needs to know where to find the backend server. The easiest way to do
 VITE_WS_SERVER_URL=<your_url_here>
 ```
 
-If you're just testing CoTab on your local browsers, you should replace `<your-url-here>` with `http://localhost:3000`. If you port forwarded your sever using VS Code, you should replace it with the "Forwarded Address" corresponding to port 3000 in the PORTS tab of the console. If you're hosting the server through a VPS hosting site, use the url or IP of the server.
+If you're just testing CoTab on your local browsers, you should replace `<your-url-here>` with `http://localhost:3000`. If you port forwarded your server using VS Code, you should replace it with the "Forwarded Address" corresponding to port 3000 in the PORTS tab of the console. If you're hosting the server through a VPS hosting site, use the url or IP of the server.
 
 Next, you need to build the extension. Do this by running the command below.
 
