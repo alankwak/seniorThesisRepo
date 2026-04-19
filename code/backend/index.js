@@ -239,6 +239,7 @@ io.on("connection", (socket) => {
   socket.on("update-session-password", (newPassword) => {
     const { roomID, userId, role } = socket;
     if(!checkAuthorized(role, roles.LEADER, roles.ADMIN)) {
+      socket.emit("new-chat-message", { text: "You don't have permission to change the session password.", system: true });
       return;
     }
     roomState[roomID].password = newPassword;
@@ -248,6 +249,7 @@ io.on("connection", (socket) => {
   socket.on("update-default-role", (newDefaultRole) => {
     const { roomID, userId, role } = socket;
     if(!checkAuthorized(role, roles.LEADER)) {
+      socket.emit("new-chat-message", { text: "You don't have permission to update the default role.", system: true });
       return;
     }
     roomState[roomID].defaultRole = newDefaultRole;
